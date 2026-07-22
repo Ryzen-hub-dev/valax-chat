@@ -1,0 +1,13 @@
+{
+  "name": "valax-discord-bot-chat",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Valax Discord Bot Chat landing page",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "author": "Jotoro",
+  "license": "UNLICENSED"
+}

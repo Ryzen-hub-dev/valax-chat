@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Valax is a free Discord bot workspace for announcements, community conversations, and direct outreach."
+    />
+    <meta name="theme-color" content="#0b0b0b" />
+    <title>Valax — Discord communication, from anywhere</title>
+    <link rel="icon" type="image/webp" href="./assets/valax-logo.webp" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" data-header>
+      <a class="brand" href="#top" aria-label="Valax home">
+        <img src="./assets/valax-logo.webp" alt="" width="44" height="44" />
+        <span>VALAX</span>
+      </a>
+
+      <nav class="desktop-nav" aria-label="Main navigation">
+        <a href="#features">Features</a>
+        <a href="#workflow">How it works</a>
+        <a href="#security">Security</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="text-link desktop-only" href="#about">About</a>
+        <a class="button button-small" href="#demo">
+          Try the demo
+          <i data-lucide="arrow-up-right" aria-hidden="true"></i>
+        </a>
+        <button
+          class="icon-button menu-toggle"
+          type="button"
+          aria-label="Open menu"
+          aria-expanded="false"
+          aria-controls="mobile-menu"
+          title="Open menu"
+        >
+          <i data-lucide="menu" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile navigation" hidden>
+        <a href="#features">Features</a>
+        <a href="#workflow">How it works</a>
+        <a href="#security">Security</a>
+        <a href="#about">About</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top" aria-labelledby="hero-title">
+        <canvas class="hero-canvas" data-scene aria-hidden="true"></canvas>
+        <div class="scene-fallback" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+
+        <div class="hero-content">
+          <p class="eyebrow reveal">Free forever. Built for Discord communities.</p>
+          <h1 id="hero-title" class="reveal">Valax</h1>
+          <p class="hero-lede reveal">
+            Run your Discord community without being tied to your desk. Send announcements,
+            continue conversations, and reach members through one focused bot workspace.
+          </p>
+          <div class="hero-actions reveal">
+            <a class="button button-primary" href="#demo">
+              Explore Valax
+              <i data-lucide="arrow-right" aria-hidden="true"></i>
+            </a>
+            <a class="button button-ghost" href="#workflow">See how it works</a>
+          </div>
+          <div class="hero-proof reveal" aria-label="Product highlights">
+            <span><i data-lucide="badge-check" aria-hidden="true"></i> No subscription</span>
+            <span><i data-lucide="shield-check" aria-hidden="true"></i> Your bot, your control</span>
+          </div>
+        </div>
+
+        <div class="hero-status" aria-label="Live product status">
+          <span class="status-pulse"></span>
+          <span>Workspace online</span>
+          <strong>02 servers ready</strong>
+        </div>
+
+        <a class="scroll-cue" href="#features" aria-label="Scroll to features">
+          <span>Discover</span>
+          <i data-lucide="arrow-down" aria-hidden="true"></i>
+        </a>
+      </section>
+
+      <section class="intro-band" id="features" aria-labelledby="features-title">
+        <div class="section-heading reveal">
+          <p class="section-index">01 / CAPABILITIES</p>
+          <h2 id="features-title">Everything important, one calm workspace.</h2>
+        </div>
+
+        <div class="feature-list">
+          <article class="feature reveal">
+            <div class="feature-icon feature-icon-yellow">
+              <i data-lucide="megaphone" aria-hidden="true"></i>
+            </div>
+            <p class="feature-number">01</p>
+            <h3>Publish with confidence</h3>
+            <p>Compose, preview, and send announcements to the right channel from any device.</p>
+          </article>
+
+          <article class="feature reveal">
+            <div class="feature-icon feature-icon-violet">
+              <i data-lucide="messages-square" aria-hidden="true"></i>
+            </div>
+            <p class="feature-number">02</p>
+            <h3>Talk as your bot</h3>
+            <p>Stay present in live channel conversations through a clean, familiar chat view.</p>
+          </article>
+
+          <article class="feature reveal">
+            <div class="feature-icon feature-icon-coral">
+              <i data-lucide="send" aria-hidden="true"></i>
+            </div>
+            <p class="feature-number">03</p>
+            <h3>Reach every member</h3>
+            <p>Prepare direct outreach with personal variables and a final review before sending.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="demo-section" id="demo" aria-labelledby="demo-title">
+        <div class="demo-copy reveal">
+          <p class="section-index">02 / LIVE PREVIEW</p>
+          <h2 id="demo-title">Write once.<br />Make it personal.</h2>
+          <p>
+            Valax resolves useful message variables before anything is sent. Try them in the
+            composer and see the final Discord message immediately.
+          </p>
+          <div class="token-list" aria-label="Available message variables">
+            <button class="token" type="button" data-token="/date">/date</button>
+            <button class="token" type="button" data-token="/time">/time</button>
+            <button class="token" type="button" data-token="/@">/@</button>
+            <button class="token" type="button" data-token="/server">/server</button>
+          </div>
+        </div>
+
+        <div class="workspace-window reveal" aria-label="Interactive Valax message preview">
+          <div class="workspace-topbar">
+            <div class="window-brand">
+              <img src="./assets/valax-logo.webp" alt="" width="30" height="30" />
+              <span>VALAX CONSOLE</span>
+            </div>
+            <div class="server-health"><span></span> Bot connected</div>
+          </div>
+
+          <div class="workspace-body">
+            <aside class="server-rail" aria-label="Demo servers">
+              <button class="server-avatar active" type="button" aria-label="Valax Community" title="Valax Community">V</button>
+              <button class="server-avatar" type="button" aria-label="Design Lab" title="Design Lab">D</button>
+              <button class="server-avatar" type="button" aria-label="Add server" title="Add server">
+                <i data-lucide="plus" aria-hidden="true"></i>
+              </button>
+            </aside>
+
+            <div class="channel-panel">
+              <div class="channel-title">
+                <span>VALAX COMMUNITY</span>
+                <i data-lucide="chevron-down" aria-hidden="true"></i>
+              </div>
+              <p>TEXT CHANNELS</p>
+              <button class="channel active" type="button"><span>#</span> announcements</button>
+              <button class="channel" type="button"><span>#</span> general</button>
+              <button class="channel" type="button"><span>#</span> support</button>
+              <div class="channel-user">
+                <span class="avatar-dot">JB</span>
+                <div><strong>Jotoro Bot</strong><small>Online</small></div>
+                <i data-lucide="settings-2" aria-hidden="true"></i>
+              </div>
+            </div>
+
+            <div class="message-panel">
+              <div class="message-header">
+                <div><span>#</span><strong>announcements</strong></div>
+                <div class="message-tools">
+                  <i data-lucide="bell" aria-hidden="true"></i>
+                  <i data-lucide="users" aria-hidden="true"></i>
+                </div>
+              </div>
+
+              <div class="message-preview" aria-live="polite">
+                <div class="bot-avatar">
+                  <img src="./assets/valax-logo.webp" alt="Valax bot" width="42" height="42" />
+                </div>
+                <div>
+                  <div class="message-meta"><strong>Valax</strong><span>BOT</span><time>Today at 10:24</time></div>
+                  <p data-preview>Hello @Alex — the Valax Community update is ready for July 23, 2026 at 10:24 AM.</p>
+                </div>
+              </div>
+
+              <div class="composer">
+                <label for="demo-message">Message</label>
+                <textarea id="demo-message" rows="3" data-composer>Hello /@ — the /server update is ready for /date at /time.</textarea>
+                <div class="composer-footer">
+                  <span data-character-count>60 / 2,000</span>
+                  <button class="send-button" type="button" data-send-demo>
+                    <i data-lucide="send" aria-hidden="true"></i>
+                    Preview ready
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="workflow-section" id="workflow" aria-labelledby="workflow-title">
+        <div class="section-heading reveal">
+          <p class="section-index">03 / FROM BOT TO WORKSPACE</p>
+          <h2 id="workflow-title">A clear path to your first message.</h2>
+        </div>
+
+        <ol class="workflow-list">
+          <li class="reveal">
+            <span class="step-number">01</span>
+            <div class="step-icon"><i data-lucide="log-in" aria-hidden="true"></i></div>
+            <h3>Sign in with Discord</h3>
+            <p>Use your Discord account and review the Valax community terms.</p>
+          </li>
+          <li class="reveal">
+            <span class="step-number">02</span>
+            <div class="step-icon"><i data-lucide="key-round" aria-hidden="true"></i></div>
+            <h3>Connect your bot</h3>
+            <p>Add the bot token privately and enable the required Discord intents.</p>
+          </li>
+          <li class="reveal">
+            <span class="step-number">03</span>
+            <div class="step-icon"><i data-lucide="scan-search" aria-hidden="true"></i></div>
+            <h3>Verify your servers</h3>
+            <p>Valax discovers available servers and confirms that messages can be delivered.</p>
+          </li>
+          <li class="reveal">
+            <span class="step-number">04</span>
+            <div class="step-icon"><i data-lucide="radio" aria-hidden="true"></i></div>
+            <h3>Start communicating</h3>
+            <p>Open a server, choose a channel, and bring your community work with you.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="security-section" id="security" aria-labelledby="security-title">
+        <div class="security-copy reveal">
+          <p class="section-index">04 / BUILT AROUND TRUST</p>
+          <h2 id="security-title">Your community is not our product.</h2>
+          <p>
+            Valax is designed as a free utility, with server-side credentials, deliberate
+            permissions, and a visible action history at the center of the product.
+          </p>
+        </div>
+        <div class="security-points">
+          <div class="security-point reveal">
+            <i data-lucide="lock-keyhole" aria-hidden="true"></i>
+            <div><strong>Private by design</strong><span>Bot credentials never belong in browser storage.</span></div>
+          </div>
+          <div class="security-point reveal">
+            <i data-lucide="list-checks" aria-hidden="true"></i>
+            <div><strong>Review before send</strong><span>Know the audience and final message before delivery.</span></div>
+          </div>
+          <div class="security-point reveal">
+            <i data-lucide="history" aria-hidden="true"></i>
+            <div><strong>Accountable actions</strong><span>Keep a useful record of important bot activity.</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="closing-section" id="about" aria-labelledby="closing-title">
+        <div class="closing-mark reveal">
+          <img src="./assets/valax-logo.webp" alt="Valax" width="96" height="96" />
+        </div>
+        <div class="closing-copy reveal">
+          <p class="section-index">VALAX / DISCORD BOT CHAT</p>
+          <h2 id="closing-title">Community work should travel with you.</h2>
+          <p>One focused place to keep your Discord community informed, responsive, and human.</p>
+          <a class="button button-primary" href="#top">
+            Back to the top
+            <i data-lucide="arrow-up" aria-hidden="true"></i>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <img src="./assets/valax-logo.webp" alt="" width="34" height="34" />
+        <strong>VALAX</strong>
+      </div>
+      <p>Designed and built by <strong>Jotoro</strong>.</p>
+      <div class="footer-links">
+        <a href="#security">Privacy</a>
+        <a href="#security">Rules</a>
+        <a href="https://discord.gg/md7xrWB2c2" target="_blank" rel="noreferrer">Discord</a>
+      </div>
+      <p class="copyright">© <span data-year></span> Valax. Free for every community.</p>
+    </footer>
+
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
