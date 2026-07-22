@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
+  "regions": ["sin1"],
   "functions": {
     "api/auth/discord.js": {
       "maxDuration": 15

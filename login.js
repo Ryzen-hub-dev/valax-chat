@@ -132,6 +132,7 @@ if (oauthError) {
   const messages = {
     access_denied: "Discord authorization was cancelled.",
     invalid_state: "The sign-in request expired. Please start again.",
+    database_unavailable: "Valax could not reach its database. Please try again after the service configuration is updated.",
     oauth_failed: "Discord sign-in could not be completed. Please try again.",
   };
   showError(messages[oauthError] || "Discord sign-in could not be completed.");
@@ -149,4 +150,3 @@ if (params.get("status") === "success" && toast) {
 }
 
 window.lucide?.createIcons();
-
