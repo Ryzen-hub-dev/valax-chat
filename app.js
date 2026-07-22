@@ -6,6 +6,36 @@ const preview = document.querySelector("[data-preview]");
 const characterCount = document.querySelector("[data-character-count]");
 const sendDemoButton = document.querySelector("[data-send-demo]");
 
+document.querySelectorAll("[data-transition]").forEach((link) => {
+  link.addEventListener("click", (event) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      link.target === "_blank"
+    ) {
+      return;
+    }
+
+    const destination = link.href;
+    if (!destination) return;
+
+    event.preventDefault();
+    document.body.classList.remove("page-enter");
+    document.body.classList.remove("page-ready");
+    document.body.classList.add("is-leaving");
+    window.setTimeout(() => window.location.assign(destination), 500);
+  });
+});
+
+window.setTimeout(() => {
+  document.body.classList.remove("page-enter");
+  document.body.classList.add("page-ready");
+}, 900);
+
 const updateHeader = () => {
   header?.classList.toggle("is-scrolled", window.scrollY > 16);
 };

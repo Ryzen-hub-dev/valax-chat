@@ -6,7 +6,11 @@
   "description": "Valax Discord Bot Chat landing page",
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "db:init": "node scripts/init-db.js"
+  },
+  "dependencies": {
+    "mongodb": "^6.17.0"
   },
   "author": "Jotoro",
   "license": "UNLICENSED"

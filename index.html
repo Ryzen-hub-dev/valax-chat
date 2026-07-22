@@ -18,7 +18,10 @@
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body>
+  <body class="page-enter">
+    <div class="page-curtain" data-page-curtain aria-hidden="true">
+      <img src="./assets/valax-logo.webp" alt="" width="64" height="64" />
+    </div>
     <a class="skip-link" href="#main">Skip to content</a>
 
     <header class="site-header" data-header>
@@ -34,7 +37,7 @@
       </nav>
 
       <div class="header-actions">
-        <a class="text-link desktop-only" href="#about">About</a>
+        <a class="text-link desktop-only" href="/login" data-transition>Log in</a>
         <a class="button button-small" href="#demo">
           Try the demo
           <i data-lucide="arrow-up-right" aria-hidden="true"></i>
@@ -56,6 +59,7 @@
         <a href="#workflow">How it works</a>
         <a href="#security">Security</a>
         <a href="#about">About</a>
+        <a href="/login" data-transition>Log in with Discord</a>
       </nav>
     </header>
 
@@ -74,11 +78,11 @@
             continue conversations, and reach members through one focused bot workspace.
           </p>
           <div class="hero-actions reveal">
-            <a class="button button-primary" href="#demo">
-              Explore Valax
-              <i data-lucide="arrow-right" aria-hidden="true"></i>
+            <a class="button button-primary" href="/login" data-transition>
+              Log in with Discord
+              <i data-lucide="log-in" aria-hidden="true"></i>
             </a>
-            <a class="button button-ghost" href="#workflow">See how it works</a>
+            <a class="button button-ghost" href="#demo">Try the live preview</a>
           </div>
           <div class="hero-proof reveal" aria-label="Product highlights">
             <span><i data-lucide="badge-check" aria-hidden="true"></i> No subscription</span>
@@ -286,9 +290,9 @@
           <p class="section-index">VALAX / DISCORD BOT CHAT</p>
           <h2 id="closing-title">Community work should travel with you.</h2>
           <p>One focused place to keep your Discord community informed, responsive, and human.</p>
-          <a class="button button-primary" href="#top">
-            Back to the top
-            <i data-lucide="arrow-up" aria-hidden="true"></i>
+          <a class="button button-primary" href="/login" data-transition>
+            Log in with Discord
+            <i data-lucide="log-in" aria-hidden="true"></i>
           </a>
         </div>
       </section>

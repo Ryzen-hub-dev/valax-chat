@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { handleApiRequest } from "./lib/api-router.js";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 const port = Number(process.env.PORT || 3000);
@@ -18,9 +19,12 @@ const contentTypes = {
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url || "/", `http://${request.headers.host || "localhost"}`);
-    const relativePath = decodeURIComponent(url.pathname) === "/"
+    if (await handleApiRequest(request, response)) return;
+
+    const pathname = decodeURIComponent(url.pathname);
+    const relativePath = pathname === "/"
       ? "index.html"
-      : decodeURIComponent(url.pathname).replace(/^\/+/, "");
+      : `${pathname.replace(/^\/+/, "")}${extname(pathname) ? "" : ".html"}`;
     const filePath = resolve(root, relativePath);
 
     if (!filePath.startsWith(resolve(root))) {

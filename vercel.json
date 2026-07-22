@@ -1,6 +1,20 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
+  "functions": {
+    "api/auth/discord.js": {
+      "maxDuration": 15
+    },
+    "api/callback.js": {
+      "maxDuration": 15
+    },
+    "api/session.js": {
+      "maxDuration": 15
+    },
+    "api/logout.js": {
+      "maxDuration": 15
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",
