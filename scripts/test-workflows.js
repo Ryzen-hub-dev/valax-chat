@@ -170,6 +170,12 @@ try {
   assert.equal(dashboard.status, 200, `${JSON.stringify(dashboard.payload)} ${seenRequests.join(", ")}`);
   assert.equal(dashboard.payload.activeBotId, ids.bot);
   assert.equal(dashboard.payload.bots.length, 1);
+  const consolidatedDashboard = await call(
+    "GET",
+    `/api/index?__valaxPath=dashboard&botId=${ids.bot}`
+  );
+  assert.equal(consolidatedDashboard.status, 200);
+  assert.equal(consolidatedDashboard.payload.activeBotId, ids.bot);
 
   const members = await call("GET", `/api/server/members?guildId=${ids.guild}&botId=${ids.bot}`);
   assert.equal(members.status, 200);

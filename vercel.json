@@ -3,40 +3,26 @@
   "cleanUrls": true,
   "regions": ["sin1"],
   "functions": {
-    "api/auth/discord.js": {
-      "maxDuration": 15
-    },
-    "api/callback.js": {
-      "maxDuration": 15
-    },
-    "api/session.js": {
-      "maxDuration": 15
-    },
-    "api/logout.js": {
-      "maxDuration": 15
-    },
-    "api/onboarding/status.js": {
-      "maxDuration": 15
-    },
-    "api/onboarding/bot.js": {
-      "maxDuration": 15
-    },
-    "api/dashboard.js": {
-      "maxDuration": 15
-    },
-    "api/dashboard/test.js": {
-      "maxDuration": 15
-    },
-    "api/server.js": {
+    "api/index.js": {
       "maxDuration": 15
     }
   },
   "rewrites": [
-    { "source": "/api/server/messages", "destination": "/api/server?__valaxRoute=messages" },
-    { "source": "/api/server/members", "destination": "/api/server?__valaxRoute=members" },
-    { "source": "/api/server/dm", "destination": "/api/server?__valaxRoute=dm" },
-    { "source": "/api/server/dm-campaigns", "destination": "/api/server?__valaxRoute=dm-campaigns" },
-    { "source": "/api/server/notifications", "destination": "/api/server?__valaxRoute=notifications" }
+    { "source": "/api/auth/discord", "destination": "/api/index?__valaxPath=auth/discord" },
+    { "source": "/api/callback", "destination": "/api/index?__valaxPath=callback" },
+    { "source": "/api/session", "destination": "/api/index?__valaxPath=session" },
+    { "source": "/api/logout", "destination": "/api/index?__valaxPath=logout" },
+    { "source": "/api/onboarding/status", "destination": "/api/index?__valaxPath=onboarding/status" },
+    { "source": "/api/onboarding/bot", "destination": "/api/index?__valaxPath=onboarding/bot" },
+    { "source": "/api/dashboard", "destination": "/api/index?__valaxPath=dashboard" },
+    { "source": "/api/dashboard/test", "destination": "/api/index?__valaxPath=dashboard/test" },
+    { "source": "/api/server", "destination": "/api/index?__valaxPath=server" },
+    { "source": "/api/server/messages", "destination": "/api/index?__valaxPath=server/messages" },
+    { "source": "/api/server/members", "destination": "/api/index?__valaxPath=server/members" },
+    { "source": "/api/server/dm", "destination": "/api/index?__valaxPath=server/dm" },
+    { "source": "/api/server/dm-campaigns", "destination": "/api/index?__valaxPath=server/dm-campaigns" },
+    { "source": "/api/server/notifications", "destination": "/api/index?__valaxPath=server/notifications" },
+    { "source": "/api/health", "destination": "/api/index?__valaxPath=health" }
   ],
   "headers": [
     {
