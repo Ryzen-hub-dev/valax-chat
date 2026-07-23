@@ -5,7 +5,7 @@ const errorView = document.querySelector("[data-auth-error]");
 const errorMessage = document.querySelector("[data-error-message]");
 const toast = document.querySelector("[data-toast]");
 const params = new URLSearchParams(window.location.search);
-const allowedReturnPaths = new Set(["/setup"]);
+const allowedReturnPaths = new Set(["/setup", "/dashboard"]);
 const requestedReturnTo = params.get("returnTo");
 const returnTo = allowedReturnPaths.has(requestedReturnTo) ? requestedReturnTo : "/setup";
 

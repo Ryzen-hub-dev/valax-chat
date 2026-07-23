@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Monitor and verify Discord server connections in Valax." />
+    <meta name="theme-color" content="#0b0b0b" />
+    <title>Dashboard - Valax</title>
+    <link rel="icon" type="image/webp" href="./assets/valax-logo.webp" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./dashboard.css" />
+  </head>
+  <body class="dashboard-page page-enter">
+    <div class="page-curtain" data-page-curtain aria-hidden="true">
+      <img src="./assets/valax-logo.webp" alt="" width="64" height="64" />
+    </div>
+
+    <button class="dashboard-menu-button" type="button" data-dashboard-menu aria-label="Open navigation" title="Open navigation">
+      <i data-lucide="menu" aria-hidden="true"></i>
+    </button>
+    <button class="dashboard-scrim" type="button" data-dashboard-scrim aria-label="Close navigation" hidden></button>
+
+    <aside class="dashboard-sidebar" data-dashboard-sidebar>
+      <a class="brand dashboard-brand" href="/" data-transition aria-label="Valax home">
+        <img src="./assets/valax-logo.webp" alt="" width="44" height="44" />
+        <span>VALAX</span>
+      </a>
+
+      <div class="sidebar-workspace" data-sidebar-bot>
+        <div class="sidebar-bot-avatar" data-sidebar-bot-avatar><i data-lucide="bot" aria-hidden="true"></i></div>
+        <div><span>CONNECTED BOT</span><strong data-sidebar-bot-name>Loading...</strong></div>
+        <span class="status-pulse" aria-hidden="true"></span>
+      </div>
+
+      <nav class="dashboard-navigation" aria-label="Dashboard navigation">
+        <p>WORKSPACE</p>
+        <a class="is-active" href="/dashboard" aria-current="page">
+          <i data-lucide="layout-dashboard" aria-hidden="true"></i>
+          Overview
+        </a>
+        <a href="/setup" data-transition>
+          <i data-lucide="bot" aria-hidden="true"></i>
+          Bot setup
+        </a>
+        <a href="https://discord.gg/md7xrWB2c2" target="_blank" rel="noreferrer">
+          <i data-lucide="life-buoy" aria-hidden="true"></i>
+          Support
+          <i class="nav-external" data-lucide="external-link" aria-hidden="true"></i>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div><span class="status-pulse"></span><strong>All systems ready</strong></div>
+        <span>VALAX / JOTORO</span>
+      </div>
+    </aside>
+
+    <main class="dashboard-main">
+      <header class="dashboard-topbar">
+        <div class="dashboard-location">
+          <span>VALAX</span>
+          <i data-lucide="chevron-right" aria-hidden="true"></i>
+          <strong>OVERVIEW</strong>
+        </div>
+        <div class="dashboard-topbar-actions">
+          <button class="icon-button" type="button" data-refresh-dashboard aria-label="Refresh server scan" title="Refresh server scan">
+            <i data-lucide="refresh-cw" aria-hidden="true"></i>
+          </button>
+          <div class="dashboard-account" data-dashboard-account hidden>
+            <div class="dashboard-account-avatar" data-account-avatar><i data-lucide="user" aria-hidden="true"></i></div>
+            <div><strong data-account-name>Discord user</strong><span data-account-handle>@discord</span></div>
+          </div>
+          <button class="icon-button" type="button" data-dashboard-logout aria-label="Sign out" title="Sign out">
+            <i data-lucide="log-out" aria-hidden="true"></i>
+          </button>
+        </div>
+      </header>
+
+      <section class="dashboard-loading" data-dashboard-loading aria-live="polite">
+        <span class="dashboard-spinner" aria-hidden="true"></span>
+        <div><strong>Scanning Discord servers</strong><span>Synchronizing the connected bot...</span></div>
+      </section>
+
+      <section class="dashboard-error" data-dashboard-error hidden>
+        <i data-lucide="triangle-alert" aria-hidden="true"></i>
+        <p><strong>Dashboard unavailable</strong><span data-dashboard-error-message>Valax could not load this workspace.</span></p>
+        <button class="button button-primary" type="button" data-dashboard-retry>
+          Try again
+          <i data-lucide="refresh-cw" aria-hidden="true"></i>
+        </button>
+        <a class="button button-ghost" href="/setup" data-transition>Open Bot setup</a>
+      </section>
+
+      <div class="dashboard-content" data-dashboard-content hidden>
+        <section class="dashboard-heading">
+          <div>
+            <p class="section-index">WORKSPACE / LIVE STATUS</p>
+            <h1>Server overview</h1>
+          </div>
+          <p>Monitor the Discord communities connected to your Valax bot.</p>
+        </section>
+
+        <section class="dashboard-metrics" aria-label="Connection summary">
+          <div>
+            <span>CONNECTED SERVERS</span>
+            <strong data-metric-guilds>0</strong>
+            <small data-metric-guilds-label>Discord guilds</small>
+          </div>
+          <div>
+            <span>AVAILABLE</span>
+            <strong data-metric-available>0</strong>
+            <small data-metric-available-label>Message tests passed</small>
+          </div>
+          <div>
+            <span>NEEDS ATTENTION</span>
+            <strong data-metric-attention>0</strong>
+            <small data-metric-attention-label>Pending verification</small>
+          </div>
+        </section>
+
+        <section class="bot-connection-band" aria-label="Connected bot">
+          <div class="dashboard-bot-avatar" data-dashboard-bot-avatar><i data-lucide="bot" aria-hidden="true"></i></div>
+          <div class="bot-connection-identity">
+            <span>CONNECTED BOT</span>
+            <strong data-dashboard-bot-name>Discord bot</strong>
+          </div>
+          <div class="bot-connection-meta">
+            <span>CONFIGURATION</span>
+            <strong><i data-lucide="badge-check" aria-hidden="true"></i> Verified</strong>
+          </div>
+          <div class="bot-connection-meta">
+            <span>LAST SYNC</span>
+            <strong data-last-sync>Just now</strong>
+          </div>
+          <a class="icon-button" href="/setup" data-transition aria-label="Manage bot connection" title="Manage bot connection">
+            <i data-lucide="settings-2" aria-hidden="true"></i>
+          </a>
+        </section>
+
+        <section class="server-section" aria-labelledby="server-list-title">
+          <div class="server-section-heading">
+            <div>
+              <p class="section-index">DISCORD CONNECTIONS</p>
+              <h2 id="server-list-title">Servers</h2>
+            </div>
+            <label class="server-search">
+              <i data-lucide="search" aria-hidden="true"></i>
+              <span class="sr-only">Search servers</span>
+              <input type="search" placeholder="Search servers" data-server-search />
+            </label>
+          </div>
+
+          <div class="server-table" data-server-table>
+            <div class="server-table-head" aria-hidden="true">
+              <span>SERVER</span><span>PERMISSIONS</span><span>CONNECTION</span><span>LAST TEST</span><span></span>
+            </div>
+            <div data-server-rows></div>
+          </div>
+
+          <div class="server-empty" data-server-empty hidden>
+            <i data-lucide="server-off" aria-hidden="true"></i>
+            <strong>No servers found</strong>
+            <span data-server-empty-message>Add the bot to a Discord server to continue.</span>
+            <a class="button button-primary" data-empty-invite href="#" target="_blank" rel="noreferrer">
+              Add bot to server
+              <i data-lucide="external-link" aria-hidden="true"></i>
+            </a>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <dialog class="test-dialog" data-test-dialog>
+      <div class="test-dialog-header">
+        <span class="test-dialog-icon"><i data-lucide="radio-tower" aria-hidden="true"></i></span>
+        <button class="icon-button" type="button" data-close-test-dialog aria-label="Close" title="Close">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+      <p class="section-index">CONNECTION TEST</p>
+      <h2>Test <span data-test-server-name>this server</span>?</h2>
+      <p>Valax will send one silent message to a writable text channel and remove it immediately.</p>
+      <div class="test-dialog-actions">
+        <button class="button button-ghost" type="button" data-cancel-test>Cancel</button>
+        <button class="button button-primary" type="button" data-confirm-test>
+          <i data-lucide="send" aria-hidden="true"></i>
+          Run test
+        </button>
+      </div>
+    </dialog>
+
+    <div class="dashboard-toast" data-dashboard-toast role="status" hidden>
+      <i data-toast-icon data-lucide="circle-check" aria-hidden="true"></i>
+      <span data-toast-message>Connection test passed.</span>
+    </div>
+
+    <span data-year hidden></span>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script type="module" src="./app.js"></script>
+    <script type="module" src="./dashboard.js"></script>
+  </body>
+</html>

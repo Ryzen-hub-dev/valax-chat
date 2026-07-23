@@ -20,6 +20,12 @@
     },
     "api/onboarding/bot.js": {
       "maxDuration": 15
+    },
+    "api/dashboard.js": {
+      "maxDuration": 15
+    },
+    "api/dashboard/test.js": {
+      "maxDuration": 15
     }
   },
   "headers": [

@@ -16,6 +16,10 @@ The frontend is static, while the API endpoints run as Node.js functions on Verc
 included local server. After signing in, `/setup` checks ValaxScrub membership and verifies the
 bot identity, privileged intents, connected servers, and Administrator permission.
 
+The `/dashboard` workspace synchronizes the connected Bot server list from Discord. Administrators
+can run an explicit connection test for each server; Valax sends one notification-suppressed test
+message, removes it immediately, and stores only the server, channel, result, and timestamp.
+
 ## Authentication configuration
 
 Create `.env.local` from `.env.example`, then add the Discord OAuth2 application and MongoDB Atlas
