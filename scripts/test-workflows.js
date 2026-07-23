@@ -174,6 +174,12 @@ try {
   const members = await call("GET", `/api/server/members?guildId=${ids.guild}&botId=${ids.bot}`);
   assert.equal(members.status, 200);
   assert.equal(members.payload.members[0].id, ids.recipient);
+  const rewrittenMembers = await call(
+    "GET",
+    `/api/server?__valaxRoute=members&guildId=${ids.guild}&botId=${ids.bot}`
+  );
+  assert.equal(rewrittenMembers.status, 200);
+  assert.equal(rewrittenMembers.payload.members[0].id, ids.recipient);
 
   const channelSend = await call("POST", "/api/server/messages", {
     guildId: ids.guild,
