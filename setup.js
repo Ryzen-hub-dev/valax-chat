@@ -18,6 +18,7 @@ const resultGuidance = document.querySelector("[data-result-guidance]");
 const botInvite = document.querySelector("[data-bot-invite]");
 
 let currentConnection = null;
+let botConnections = [];
 
 function refreshIcons() {
   window.lucide?.createIcons();
@@ -199,9 +200,53 @@ function renderComplete(connection) {
     connection?.bot?.avatarUrl,
     `${connection?.bot?.username || "Discord bot"} avatar`
   );
+  renderBotFleet();
   setProgress("complete", connection);
   showPanel("complete");
   refreshIcons();
+}
+
+function renderBotFleet() {
+  const list = document.querySelector("[data-bot-fleet-list]");
+  const count = document.querySelector("[data-bot-fleet-count]");
+  if (!list || !count) return;
+  count.textContent = `${botConnections.length} connected bot${botConnections.length === 1 ? "" : "s"}`;
+  list.replaceChildren(...botConnections.map((connection) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `bot-fleet-row${connection.bot?.id === currentConnection?.bot?.id ? " is-active" : ""}`;
+    const avatar = document.createElement("span");
+    avatar.className = "bot-fleet-avatar";
+    replaceAvatar(avatar, connection.bot?.avatarUrl, `${connection.bot?.username || "Discord bot"} avatar`);
+    const identity = document.createElement("span");
+    const name = document.createElement("strong");
+    name.textContent = connection.bot?.username || "Discord bot";
+    const meta = document.createElement("small");
+    meta.textContent = `${connection.guilds?.length || 0} server${connection.guilds?.length === 1 ? "" : "s"}`;
+    identity.append(name, meta);
+    const status = document.createElement("span");
+    status.className = `bot-fleet-status${connection.ready ? " is-ready" : ""}`;
+    status.append(icon(connection.ready ? "circle-check" : "circle-alert"), connection.ready ? "Ready" : "Needs attention");
+    button.append(avatar, identity, status, icon("chevron-right"));
+    button.addEventListener("click", () => {
+      currentConnection = connection;
+      setProgress("bot", connection);
+      showPanel("bot");
+      renderConnection(connection);
+    });
+    return button;
+  }));
+  refreshIcons();
+}
+
+function startAddingBot() {
+  currentConnection = null;
+  results.hidden = true;
+  botError.hidden = true;
+  setProgress("bot", null);
+  showPanel("bot");
+  tokenInput.value = "";
+  window.setTimeout(() => tokenInput.focus(), 50);
 }
 
 function showBotError(message) {
@@ -239,12 +284,15 @@ async function loadStatus() {
     if (!response.ok) throw new Error(payload.error || "Valax could not load your setup status.");
 
     renderAccount(payload.user);
+    botConnections = Array.isArray(payload.botConnections) ? payload.botConnections : payload.botConnection ? [payload.botConnection] : [];
     currentConnection = payload.botConnection;
     membershipNotice.hidden = !(payload.currentStep === "community" && new URLSearchParams(location.search).has("checked"));
 
     if (payload.currentStep === "community") {
       setProgress("community");
       showPanel("community");
+    } else if (new URLSearchParams(location.search).get("mode") === "add") {
+      startAddingBot();
     } else if (payload.currentStep === "complete" && payload.botConnection) {
       renderComplete(payload.botConnection);
     } else {
@@ -268,7 +316,7 @@ async function verifyBot(token) {
       method: "POST",
       credentials: "same-origin",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify(token ? { token } : {}),
+      body: JSON.stringify(token ? { token } : { botId: currentConnection?.bot?.id }),
     });
     tokenInput.value = "";
     tokenInput.type = "password";
@@ -290,6 +338,7 @@ async function verifyBot(token) {
     if (!response.ok) throw new Error(payload.error || "Discord could not verify this bot right now.");
 
     renderConnection(payload.connection);
+    botConnections = Array.isArray(payload.botConnections) ? payload.botConnections : botConnections;
     if (payload.connection?.ready) {
       window.setTimeout(() => renderComplete(payload.connection), 650);
     } else {
@@ -326,6 +375,7 @@ botForm?.addEventListener("submit", (event) => {
 });
 
 document.querySelector("[data-recheck-bot]")?.addEventListener("click", () => verifyBot(""));
+document.querySelectorAll("[data-add-bot]").forEach((button) => button.addEventListener("click", startAddingBot));
 document.querySelector("[data-review-connection]")?.addEventListener("click", () => {
   setProgress("bot", currentConnection);
   showPanel("bot");

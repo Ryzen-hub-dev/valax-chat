@@ -54,7 +54,11 @@
 
         <footer class="channel-bot-footer">
           <div class="channel-bot-avatar" data-bot-avatar><i data-lucide="bot" aria-hidden="true"></i></div>
-          <div><span>CONNECTED AS</span><strong data-bot-name>Discord bot</strong></div>
+          <div>
+            <span>CONNECTED AS</span>
+            <strong data-bot-name>Discord bot</strong>
+            <select data-workspace-bot-selector aria-label="Active bot" hidden></select>
+          </div>
           <a class="channel-settings" href="/setup" data-transition aria-label="Bot settings" title="Bot settings">
             <i data-lucide="settings-2" aria-hidden="true"></i>
           </a>
@@ -79,6 +83,15 @@
               Announcement
             </button>
           </div>
+          <button class="icon-button" type="button" data-open-members aria-label="Browse server members" title="Browse server members">
+            <i data-lucide="users" aria-hidden="true"></i>
+          </button>
+          <button class="icon-button" type="button" data-open-campaign aria-label="Send member notification" title="Send member notification">
+            <i data-lucide="mails" aria-hidden="true"></i>
+          </button>
+          <button class="icon-button" type="button" data-open-notifications aria-label="Notification settings" title="Notification settings">
+            <i data-lucide="bell" aria-hidden="true"></i>
+          </button>
           <button class="icon-button" type="button" data-refresh-messages aria-label="Refresh messages" title="Refresh messages">
             <i data-lucide="refresh-cw" aria-hidden="true"></i>
           </button>
@@ -119,11 +132,18 @@
             <i data-lucide="megaphone" aria-hidden="true"></i>
             <span data-composer-mode-text>Announcement mode</span>
           </div>
+          <div class="composer-reply" data-composer-reply hidden>
+            <i data-lucide="reply" aria-hidden="true"></i>
+            <span>Replying to <strong data-reply-author>Discord user</strong></span>
+            <label><input type="checkbox" data-notify-reply checked /> Notify</label>
+            <button type="button" data-cancel-reply aria-label="Cancel reply" title="Cancel reply"><i data-lucide="x" aria-hidden="true"></i></button>
+          </div>
           <div class="composer-tools">
             <div class="dynamic-tokens" aria-label="Dynamic values">
               <button type="button" data-token="/date">/date</button>
               <button type="button" data-token="/time">/time</button>
               <button type="button" data-token="/server">/server</button>
+              <button type="button" data-open-members>/@</button>
             </div>
             <label class="mention-policy">
               <i data-lucide="at-sign" aria-hidden="true"></i>
@@ -155,6 +175,94 @@
         </form>
       </div>
     </main>
+
+    <dialog class="workspace-dialog member-dialog" data-member-dialog>
+      <header class="workspace-dialog-header">
+        <div><span>SERVER DIRECTORY</span><h2>Members</h2></div>
+        <button class="icon-button" type="button" data-close-members aria-label="Close members" title="Close members"><i data-lucide="x" aria-hidden="true"></i></button>
+      </header>
+      <label class="dialog-search">
+        <i data-lucide="search" aria-hidden="true"></i>
+        <input type="search" data-member-search placeholder="Search members" aria-label="Search members" />
+      </label>
+      <div class="member-list" data-member-list>
+        <div class="dialog-loading"><span class="workspace-spinner"></span><span>Loading members...</span></div>
+      </div>
+      <button class="dialog-load-more" type="button" data-load-more-members hidden>Load more members</button>
+    </dialog>
+
+    <dialog class="workspace-dialog dm-dialog" data-dm-dialog>
+      <header class="workspace-dialog-header">
+        <div class="dm-member-heading">
+          <span class="dm-member-avatar" data-dm-member-avatar><i data-lucide="user" aria-hidden="true"></i></span>
+          <div><span>DIRECT MESSAGE</span><h2 data-dm-member-name>Discord member</h2></div>
+        </div>
+        <button class="icon-button" type="button" data-close-dm aria-label="Close direct message" title="Close direct message"><i data-lucide="x" aria-hidden="true"></i></button>
+      </header>
+      <div class="dm-opt-out" data-dm-opt-out hidden><i data-lucide="shield-x" aria-hidden="true"></i><span>This member has opted out of bot notifications.</span></div>
+      <div class="dm-message-list" data-dm-message-list></div>
+      <form class="dm-composer" data-dm-form>
+        <div class="dynamic-tokens">
+          <button type="button" data-dm-token="/date">/date</button>
+          <button type="button" data-dm-token="/time">/time</button>
+          <button type="button" data-dm-token="/@">/@</button>
+          <button type="button" data-dm-token="/server">/server</button>
+        </div>
+        <div><textarea data-dm-input rows="3" maxlength="2000" placeholder="Write a private message..." aria-label="Direct message content"></textarea><button class="composer-send" type="submit" data-send-dm aria-label="Send direct message" title="Send direct message"><i data-lucide="send" aria-hidden="true"></i></button></div>
+      </form>
+    </dialog>
+
+    <dialog class="workspace-dialog campaign-dialog" data-campaign-dialog>
+      <header class="workspace-dialog-header">
+        <div><span>CONTROLLED DELIVERY</span><h2>Member notification</h2></div>
+        <button class="icon-button" type="button" data-close-campaign aria-label="Close campaign" title="Close campaign"><i data-lucide="x" aria-hidden="true"></i></button>
+      </header>
+      <div class="campaign-safeguards">
+        <i data-lucide="shield-check" aria-hidden="true"></i>
+        <span>6-hour campaign cooldown, 24-hour recipient deduplication, STOP detection, and Discord rate-limit backoff are enforced.</span>
+      </div>
+      <form data-campaign-form>
+        <label for="campaign-message">Message</label>
+        <textarea id="campaign-message" data-campaign-input rows="6" maxlength="2000" placeholder="Write one notification for eligible server members..." required></textarea>
+        <div class="dynamic-tokens">
+          <button type="button" data-campaign-token="/date">/date</button>
+          <button type="button" data-campaign-token="/time">/time</button>
+          <button type="button" data-campaign-token="/@">/@</button>
+          <button type="button" data-campaign-token="/server">/server</button>
+        </div>
+        <button class="button button-primary" type="button" data-preview-campaign><i data-lucide="scan-search" aria-hidden="true"></i> Review recipients</button>
+        <div class="campaign-confirm" data-campaign-confirm hidden>
+          <div><strong data-campaign-count>0 eligible members</strong><span data-campaign-limit></span></div>
+          <label for="campaign-confirmation">Type <strong data-campaign-server-name>server name</strong> to confirm</label>
+          <input id="campaign-confirmation" data-campaign-confirmation autocomplete="off" />
+          <button class="button button-primary" type="submit" data-start-campaign disabled><i data-lucide="send" aria-hidden="true"></i> Start notification</button>
+        </div>
+      </form>
+      <div class="campaign-progress" data-campaign-progress hidden>
+        <div><strong data-campaign-status>Preparing delivery</strong><span data-campaign-progress-label>0 / 0 processed</span></div>
+        <progress data-campaign-progress-bar max="100" value="0"></progress>
+        <div class="campaign-metrics"><span><strong data-campaign-sent>0</strong> sent</span><span><strong data-campaign-failed>0</strong> failed</span><span><strong data-campaign-skipped>0</strong> protected</span></div>
+        <button class="button button-ghost" type="button" data-cancel-campaign>Cancel campaign</button>
+      </div>
+    </dialog>
+
+    <dialog class="workspace-dialog notification-dialog" data-notification-dialog>
+      <header class="workspace-dialog-header">
+        <div><span>SMART ALERTS</span><h2>Notifications</h2></div>
+        <button class="icon-button" type="button" data-close-notifications aria-label="Close notification settings" title="Close notification settings"><i data-lucide="x" aria-hidden="true"></i></button>
+      </header>
+      <form class="notification-settings" data-notification-form>
+        <label><span><strong>Notifications</strong><small>Master control for this server.</small></span><input type="checkbox" data-setting="enabled" /></label>
+        <label><span><strong>Browser alerts</strong><small>Show alerts when Valax is in the background.</small></span><input type="checkbox" data-setting="browser" /></label>
+        <label><span><strong>Sounds</strong><small>Use a distinct tone for each priority.</small></span><input type="checkbox" data-setting="sounds" /></label>
+        <label><span><strong>Normal messages</strong><small>Off by default to reduce noise.</small></span><input type="checkbox" data-setting="normalMessages" /></label>
+        <label><span><strong>Mentions</strong><small>High-priority two-tone alert.</small></span><input type="checkbox" data-setting="mentions" /></label>
+        <label><span><strong>Replies</strong><small>Separate reply notification tone.</small></span><input type="checkbox" data-setting="replies" /></label>
+        <label><span><strong>Direct messages</strong><small>Private conversation alert tone.</small></span><input type="checkbox" data-setting="directMessages" /></label>
+        <div class="quiet-hours"><label><input type="checkbox" data-quiet-enabled /> Quiet hours</label><input type="time" data-quiet-start /><span>to</span><input type="time" data-quiet-end /></div>
+        <button class="button button-primary" type="submit" data-save-notifications><i data-lucide="save" aria-hidden="true"></i> Save settings</button>
+      </form>
+    </dialog>
 
     <div class="workspace-toast" data-workspace-toast role="status" hidden>
       <i data-workspace-toast-icon data-lucide="circle-check" aria-hidden="true"></i>

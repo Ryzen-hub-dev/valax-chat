@@ -207,6 +207,25 @@
   white-space: nowrap;
 }
 
+.channel-bot-footer select {
+  display: block;
+  width: 100%;
+  height: 22px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #aaa9a3;
+  font-size: 9px;
+  text-overflow: ellipsis;
+}
+
+.channel-bot-footer select[hidden],
+.channel-bot-footer select:not([hidden]) + * {
+  display: none;
+}
+
 .channel-server-header > .status-pulse {
   grid-row: auto;
 }
@@ -911,6 +930,535 @@
   flex: 0 0 auto;
 }
 
+.composer-reply {
+  display: grid;
+  min-height: 34px;
+  grid-template-columns: 18px minmax(0, 1fr) auto 28px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 11px;
+  border: 1px solid #383835;
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  background: #171716;
+  color: #898983;
+  font-size: 8px;
+}
+
+.composer-reply[hidden],
+.dm-opt-out[hidden],
+.campaign-confirm[hidden],
+.campaign-progress[hidden] {
+  display: none;
+}
+
+.composer-reply > svg {
+  width: 13px;
+  color: var(--yellow);
+}
+
+.composer-reply label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.composer-reply button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #777771;
+  cursor: pointer;
+}
+
+.composer-reply button svg {
+  width: 13px;
+}
+
+.message-reference {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 4px;
+  color: #70706a;
+  font-size: 8px;
+}
+
+.message-reference::before {
+  width: 18px;
+  height: 7px;
+  border-top: 1px solid #444441;
+  border-left: 1px solid #444441;
+  border-radius: 4px 0 0;
+  content: "";
+}
+
+.message-reference strong {
+  color: #9e9e98;
+}
+
+.message-reference span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message-actions {
+  display: inline-flex;
+  margin-top: 5px;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.discord-message:hover .message-actions,
+.discord-message:focus-within .message-actions {
+  opacity: 1;
+}
+
+.message-actions button {
+  display: inline-flex;
+  min-height: 25px;
+  align-items: center;
+  gap: 5px;
+  padding: 0 7px;
+  border: 1px solid #343432;
+  border-radius: 3px;
+  background: transparent;
+  color: #777771;
+  font-size: 7px;
+  cursor: pointer;
+}
+
+.message-actions button:hover {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+.message-actions svg {
+  width: 11px;
+}
+
+.workspace-dialog {
+  width: min(680px, calc(100vw - 32px));
+  max-height: min(820px, calc(100svh - 32px));
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #3b3b38;
+  border-radius: 6px;
+  background: #111;
+  color: var(--paper);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.72);
+}
+
+.workspace-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.74);
+  backdrop-filter: blur(5px);
+}
+
+.workspace-dialog-header {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.workspace-dialog-header > div:not(.dm-member-heading) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.workspace-dialog-header span,
+.campaign-safeguards,
+.campaign-confirm label,
+.campaign-progress,
+.notification-settings small {
+  font-family: "DM Mono", monospace;
+}
+
+.workspace-dialog-header span {
+  color: #686862;
+  font-size: 7px;
+}
+
+.workspace-dialog-header h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.workspace-dialog-header .icon-button {
+  width: 36px;
+  height: 36px;
+  color: #85857f;
+}
+
+.workspace-dialog-header .icon-button svg {
+  width: 15px;
+}
+
+.dialog-search {
+  display: grid;
+  height: 48px;
+  grid-template-columns: 44px 1fr;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  color: #696963;
+}
+
+.dialog-search svg {
+  width: 15px;
+  justify-self: center;
+}
+
+.dialog-search input {
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--paper);
+  font-size: 10px;
+}
+
+.member-list {
+  min-height: 240px;
+  max-height: min(560px, calc(100svh - 210px));
+  overflow-y: auto;
+  padding: 8px 14px;
+}
+
+.dialog-loading {
+  display: flex;
+  min-height: 220px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #777771;
+  font-size: 9px;
+}
+
+.dialog-loading .workspace-spinner {
+  width: 20px;
+  height: 20px;
+}
+
+.member-row {
+  display: grid;
+  min-height: 56px;
+  grid-template-columns: 36px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 9px;
+  padding: 0 7px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.member-avatar,
+.dm-member-avatar {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  place-items: center;
+  border-radius: 50%;
+  background: #242422;
+  color: #aaa9a3;
+  font-size: 10px;
+}
+
+.member-avatar img,
+.dm-member-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.member-identity {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.member-identity strong,
+.member-identity span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-identity strong {
+  font-size: 10px;
+}
+
+.member-identity span {
+  color: #686862;
+  font-size: 8px;
+}
+
+.member-row button {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid #343432;
+  border-radius: 4px;
+  background: transparent;
+  color: #85857f;
+  cursor: pointer;
+}
+
+.member-row button:hover {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+.member-row button svg {
+  width: 14px;
+}
+
+.dialog-load-more {
+  width: 100%;
+  min-height: 42px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: #151514;
+  color: #8b8b85;
+  font-size: 8px;
+  cursor: pointer;
+}
+
+.dm-dialog {
+  width: min(760px, calc(100vw - 32px));
+}
+
+.dm-member-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.dm-member-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dm-opt-out,
+.campaign-safeguards {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 20px;
+  border-bottom: 1px solid rgba(255, 113, 104, 0.25);
+  background: #1d1716;
+  color: #efb1ad;
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.dm-opt-out svg,
+.campaign-safeguards svg {
+  width: 15px;
+  flex: 0 0 auto;
+}
+
+.dm-message-list {
+  min-height: 300px;
+  max-height: min(520px, calc(100svh - 280px));
+  overflow-y: auto;
+  padding: 18px 24px;
+}
+
+.dm-message-list .discord-message {
+  grid-template-columns: 34px minmax(0, 1fr);
+}
+
+.dm-composer {
+  padding: 10px 18px 16px;
+  border-top: 1px solid var(--line);
+}
+
+.dm-composer > div:last-child {
+  display: grid;
+  min-height: 78px;
+  grid-template-columns: minmax(0, 1fr) 46px;
+  border: 1px solid #3a3a37;
+  border-radius: 5px;
+  background: #151514;
+}
+
+.dm-composer textarea {
+  resize: vertical;
+  padding: 12px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--paper);
+}
+
+.campaign-safeguards {
+  border-color: rgba(255, 229, 0, 0.22);
+  background: #1b1a10;
+  color: #d5cb7c;
+}
+
+.campaign-dialog > form,
+.campaign-progress,
+.notification-settings {
+  display: grid;
+  gap: 13px;
+  max-height: calc(100svh - 150px);
+  overflow-y: auto;
+  padding: 20px 22px 24px;
+}
+
+.campaign-dialog > form[hidden] {
+  display: none;
+}
+
+.campaign-dialog form > label,
+.campaign-confirm > label {
+  color: #83837d;
+  font-size: 8px;
+}
+
+.campaign-dialog textarea,
+.campaign-confirm input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #3a3a37;
+  border-radius: 4px;
+  outline: 0;
+  background: #151514;
+  color: var(--paper);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.campaign-dialog textarea:focus,
+.campaign-confirm input:focus {
+  border-color: var(--yellow);
+}
+
+.campaign-dialog .button,
+.notification-settings .button {
+  width: fit-content;
+}
+
+.campaign-confirm {
+  display: grid;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.campaign-confirm > div,
+.campaign-progress > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.campaign-confirm > div span,
+.campaign-progress > div:first-child span {
+  color: #74746e;
+  font-size: 8px;
+}
+
+.campaign-progress progress {
+  width: 100%;
+  height: 8px;
+  accent-color: var(--yellow);
+}
+
+.campaign-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line);
+}
+
+.campaign-metrics span {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  background: #131313;
+  color: #777771;
+  font-size: 7px;
+}
+
+.campaign-metrics strong {
+  color: var(--paper);
+  font-size: 15px;
+}
+
+.notification-settings {
+  gap: 0;
+}
+
+.notification-settings > label {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.notification-settings > label > span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.notification-settings label strong {
+  font-size: 10px;
+}
+
+.notification-settings label small {
+  color: #6f6f69;
+  font-size: 7px;
+}
+
+.notification-settings input[type="checkbox"],
+.composer-reply input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--yellow);
+}
+
+.quiet-hours {
+  display: grid;
+  min-height: 64px;
+  grid-template-columns: 1fr 92px auto 92px;
+  align-items: center;
+  gap: 9px;
+}
+
+.quiet-hours label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9px;
+}
+
+.quiet-hours input[type="time"] {
+  height: 34px;
+  padding: 0 7px;
+  border: 1px solid #383835;
+  border-radius: 3px;
+  background: #151514;
+  color: #aaa9a3;
+}
+
 @media (max-width: 980px) {
   .workspace-sidebar {
     width: 332px;
@@ -1060,5 +1608,46 @@
   .workspace-toast {
     right: 16px;
     bottom: 16px;
+  }
+
+  .chat-header-actions > [data-open-campaign] {
+    display: none;
+  }
+
+  .workspace-dialog {
+    width: calc(100vw - 16px);
+    max-height: calc(100svh - 16px);
+  }
+
+  .workspace-dialog-header {
+    min-height: 66px;
+    padding: 0 14px;
+  }
+
+  .member-list,
+  .dm-message-list {
+    max-height: calc(100svh - 220px);
+  }
+
+  .member-row {
+    grid-template-columns: 34px minmax(0, 1fr) 30px 30px;
+    gap: 6px;
+    padding: 0;
+  }
+
+  .member-row button {
+    width: 30px;
+    height: 30px;
+  }
+
+  .campaign-dialog > form,
+  .campaign-progress,
+  .notification-settings {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .quiet-hours {
+    grid-template-columns: 1fr 82px auto 82px;
   }
 }

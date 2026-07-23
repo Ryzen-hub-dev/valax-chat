@@ -229,6 +229,16 @@
             <span class="ready-badge"><span class="status-pulse"></span> Ready</span>
           </div>
 
+          <section class="bot-fleet" aria-labelledby="bot-fleet-title">
+            <div class="bot-fleet-heading">
+              <div><span>BOT FLEET</span><strong id="bot-fleet-title" data-bot-fleet-count>1 connected bot</strong></div>
+              <button class="icon-button" type="button" data-add-bot aria-label="Add another bot" title="Add another bot">
+                <i data-lucide="plus" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="bot-fleet-list" data-bot-fleet-list></div>
+          </section>
+
           <div class="panel-actions">
             <a class="button button-primary" href="/dashboard" data-transition>
               Open dashboard
@@ -237,6 +247,10 @@
             <button class="button button-ghost" type="button" data-review-connection>
               Review connection
               <i data-lucide="settings-2" aria-hidden="true"></i>
+            </button>
+            <button class="button button-ghost" type="button" data-add-bot>
+              Add another bot
+              <i data-lucide="plus" aria-hidden="true"></i>
             </button>
           </div>
         </section>

@@ -885,6 +885,129 @@
   height: 7px;
 }
 
+.bot-fleet {
+  width: min(760px, 100%);
+  margin-top: 28px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.bot-fleet-heading {
+  display: flex;
+  min-height: 66px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bot-fleet-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.bot-fleet-heading span,
+.bot-fleet-row small,
+.bot-fleet-status {
+  font-family: "DM Mono", monospace;
+}
+
+.bot-fleet-heading span {
+  color: #676761;
+  font-size: 7px;
+}
+
+.bot-fleet-heading strong {
+  font-size: 11px;
+}
+
+.bot-fleet-heading .icon-button {
+  width: 36px;
+  height: 36px;
+  color: var(--yellow);
+}
+
+.bot-fleet-list {
+  border-top: 1px solid var(--line);
+}
+
+.bot-fleet-row {
+  display: grid;
+  width: 100%;
+  min-height: 62px;
+  grid-template-columns: 34px minmax(0, 1fr) auto 16px;
+  align-items: center;
+  gap: 11px;
+  padding: 0 8px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: transparent;
+  color: var(--paper);
+  text-align: left;
+  cursor: pointer;
+}
+
+.bot-fleet-row:last-child {
+  border-bottom: 0;
+}
+
+.bot-fleet-row:hover,
+.bot-fleet-row.is-active {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.bot-fleet-avatar {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid #3a3a38;
+  border-radius: 4px;
+  background: #20201f;
+}
+
+.bot-fleet-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bot-fleet-row > span:nth-child(2) {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bot-fleet-row strong {
+  overflow: hidden;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bot-fleet-row small {
+  color: #666660;
+  font-size: 7px;
+}
+
+.bot-fleet-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--coral);
+  font-size: 7px;
+}
+
+.bot-fleet-status.is-ready {
+  color: var(--green);
+}
+
+.bot-fleet-status svg,
+.bot-fleet-row > svg {
+  width: 13px;
+}
+
 @media (max-width: 1050px) {
   .setup-layout {
     grid-template-columns: 230px 1fr;

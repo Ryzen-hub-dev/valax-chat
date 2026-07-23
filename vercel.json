@@ -32,6 +32,18 @@
     },
     "api/server/messages.js": {
       "maxDuration": 15
+    },
+    "api/server/members.js": {
+      "maxDuration": 15
+    },
+    "api/server/dm.js": {
+      "maxDuration": 15
+    },
+    "api/server/dm-campaigns.js": {
+      "maxDuration": 15
+    },
+    "api/server/notifications.js": {
+      "maxDuration": 15
     }
   },
   "headers": [

@@ -16,7 +16,8 @@ The frontend is static, while the API endpoints run as Node.js functions on Verc
 included local server. After signing in, `/setup` checks ValaxScrub membership and verifies the
 bot identity, privileged intents, connected servers, and Administrator permission.
 
-The `/dashboard` workspace synchronizes the connected Bot server list from Discord. Administrators
+The `/dashboard` workspace manages up to ten encrypted Bot connections and synchronizes the selected
+Bot's server list from Discord. Administrators
 can run an explicit connection test for each server; Valax sends one notification-suppressed test
 message, removes it immediately, and stores only the server, channel, result, and timestamp.
 
@@ -26,6 +27,20 @@ through the connected Bot. Announcement channels support Discord crossposting. D
 `/time`, and `/server` values are resolved on the server, and mention parsing is disabled by default.
 Message audit records contain delivery metadata only and expire after 90 days; message content is not
 stored in MongoDB.
+
+The server workspace also includes a searchable member directory, explicit user mentions, Discord
+message replies, and one-to-one Bot DMs. Channel messages use incremental synchronization and a
+five-minute channel validation cache to reduce Discord API traffic. Notification preferences are
+stored per account, Bot, and server; normal messages, mentions, replies, and DMs use separate browser
+tones with quiet hours and an anti-noise grouping window.
+
+Member-wide DM notifications run as resumable campaigns. A campaign requires an exact server-name
+confirmation, processes one recipient per serverless request, honors Discord `retry_after`, detects
+`STOP`, `UNSUBSCRIBE`, or `OPT OUT`, and prevents a recipient from receiving another campaign message
+from the same Bot and server for 24 hours. A server can start one campaign every six hours, and a
+campaign is limited to the first 1,000 eligible human members. Campaign content is encrypted while
+delivery is active and removed when the campaign completes or is cancelled. Delivery audit records
+never contain message content.
 
 ## Authentication configuration
 
@@ -53,3 +68,16 @@ decrypted. Bot Tokens are validated only on the server and stored with AES-256-G
 
 For production, add every variable to the Vercel Production environment and redeploy. The Discord
 application redirect URI must exactly match `${SITE_URL}/api/callback`.
+
+## Verification
+
+Run the database migration and workflow tests before deployment:
+
+```powershell
+npm run db:init
+npm test
+```
+
+The workflow test uses a temporary MongoDB user record and mocked Discord responses to verify Bot
+selection, member mentions, replies, direct messages, campaigns, and notification settings. Temporary
+records are removed in a `finally` block even when an assertion fails.

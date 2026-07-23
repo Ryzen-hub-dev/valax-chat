@@ -14,10 +14,14 @@ const confirmTestButton = document.querySelector("[data-confirm-test]");
 const toast = document.querySelector("[data-dashboard-toast]");
 const toastMessage = document.querySelector("[data-toast-message]");
 const toastIcon = document.querySelector("[data-toast-icon]");
+const botSelector = document.querySelector("[data-bot-selector]");
+const botSelectorWrap = document.querySelector("[data-bot-selector-wrap]");
 
 let dashboard = null;
 let selectedGuildId = null;
+let openAfterTest = false;
 let toastTimer = null;
+let requestedBotId = new URLSearchParams(window.location.search).get("botId") || "";
 
 function refreshIcons() {
   window.lucide?.createIcons();
@@ -92,7 +96,8 @@ function routeForApiError(response, payload) {
     payload.code === "SETUP_REQUIRED" ||
     payload.code === "BOT_SETUP_REQUIRED" ||
     payload.code === "BOT_TOKEN_INVALID" ||
-    payload.code === "BOT_TOKEN_RECONNECT_REQUIRED"
+      payload.code === "BOT_TOKEN_RECONNECT_REQUIRED" ||
+      payload.code === "BOT_NOT_FOUND"
   ) {
     leaveFor("/setup");
     return true;
@@ -191,36 +196,39 @@ function createServerRow(guild) {
 
   const action = document.createElement("div");
   action.className = "server-actions";
-  if (guild.administrator) {
-    if (guild.available) {
-      const open = document.createElement("a");
-      open.className = "server-action is-open";
-      open.href = `/server?guildId=${encodeURIComponent(guild.id)}`;
-      open.append(icon("arrow-right"), "Open");
-      open.addEventListener("click", (event) => {
-        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-        event.preventDefault();
-        leaveFor(open.href);
-      });
-      action.append(open);
-
-      const retest = document.createElement("button");
-      retest.type = "button";
-      retest.className = "server-action is-icon";
-      retest.title = "Run connection test again";
-      retest.setAttribute("aria-label", "Run connection test again");
-      retest.append(icon("refresh-cw"));
-      retest.addEventListener("click", () => openTestDialog(guild.id));
-      action.append(retest);
+  if (guild.available) {
+    const open = document.createElement("a");
+    open.className = "server-action is-open";
+    open.href = `/server?guildId=${encodeURIComponent(guild.id)}&botId=${encodeURIComponent(dashboard.activeBotId)}`;
+    open.append(icon("arrow-right"), "Open");
+    open.addEventListener("click", (event) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      leaveFor(open.href);
+    });
+    action.append(open);
+  } else {
+    const open = document.createElement("button");
+    open.type = "button";
+    open.className = "server-action is-open is-locked";
+    open.title = guild.administrator ? "Run a connection test to open" : "Administrator permission is required";
+    open.append(icon("lock-keyhole"), "Open");
+    if (guild.administrator) {
+      open.addEventListener("click", () => openTestDialog(guild.id, true));
     } else {
-      const test = document.createElement("button");
-      test.type = "button";
-      test.className = "server-action";
-      test.title = "Run connection test";
-      test.append(icon("radio-tower"), "Test");
-      test.addEventListener("click", () => openTestDialog(guild.id));
-      action.append(test);
+      open.disabled = true;
     }
+    action.append(open);
+  }
+
+  if (guild.administrator) {
+    const test = document.createElement("button");
+    test.type = "button";
+    test.className = "server-action";
+    test.title = guild.available ? "Run connection test again" : "Run connection test";
+    test.append(icon(guild.available ? "refresh-cw" : "radio-tower"), guild.available ? "Retest" : "Test");
+    test.addEventListener("click", () => openTestDialog(guild.id));
+    action.append(test);
   } else {
     const fix = document.createElement("a");
     fix.className = "server-action is-fix";
@@ -283,6 +291,18 @@ function renderDashboard(payload) {
   replaceAvatar(document.querySelector("[data-dashboard-bot-avatar]"), payload.bot.avatarUrl, `${payload.bot.username} avatar`);
   document.querySelector("[data-last-sync]").textContent = formatRelativeDate(payload.syncedAt);
   document.querySelector("[data-empty-invite]").href = payload.bot.inviteUrl;
+  document.querySelector("[data-bot-count]").textContent = `${payload.bots?.length || 1} BOT${payload.bots?.length === 1 ? "" : "S"}`;
+
+  if (botSelector && botSelectorWrap) {
+    botSelector.replaceChildren(...(payload.bots || [payload.bot]).map((bot) => {
+      const option = document.createElement("option");
+      option.value = bot.id;
+      option.textContent = bot.username;
+      option.selected = bot.id === payload.activeBotId;
+      return option;
+    }));
+    botSelectorWrap.hidden = false;
+  }
 
   updateMetrics();
   renderServers();
@@ -294,7 +314,8 @@ async function loadDashboard() {
   setLoading(true);
 
   try {
-    const response = await fetch("/api/dashboard", {
+    const query = requestedBotId ? `?botId=${encodeURIComponent(requestedBotId)}` : "";
+    const response = await fetch(`/api/dashboard${query}`, {
       credentials: "same-origin",
       headers: { Accept: "application/json" },
     });
@@ -307,10 +328,11 @@ async function loadDashboard() {
   }
 }
 
-function openTestDialog(guildId) {
+function openTestDialog(guildId, shouldOpenAfterTest = false) {
   const guild = dashboard.guilds.find((item) => item.id === guildId);
   if (!guild || !testDialog) return;
   selectedGuildId = guildId;
+  openAfterTest = shouldOpenAfterTest;
   testServerName.textContent = guild.name;
   testDialog.showModal();
 }
@@ -318,6 +340,7 @@ function openTestDialog(guildId) {
 function closeTestDialog() {
   if (testDialog?.open) testDialog.close();
   selectedGuildId = null;
+  openAfterTest = false;
 }
 
 function setTestBusy(isBusy) {
@@ -330,6 +353,7 @@ function setTestBusy(isBusy) {
 async function runGuildTest() {
   if (!selectedGuildId) return;
   const guildId = selectedGuildId;
+  const shouldOpenAfterTest = openAfterTest;
   setTestBusy(true);
 
   try {
@@ -337,7 +361,7 @@ async function runGuildTest() {
       method: "POST",
       credentials: "same-origin",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify({ guildId }),
+      body: JSON.stringify({ guildId, botId: dashboard.activeBotId }),
     });
     const payload = await readPayload(response);
     if (routeForApiError(response, payload)) return;
@@ -354,6 +378,12 @@ async function runGuildTest() {
     updateMetrics();
     renderServers();
     showToast(payload.guild.messageRemoved ? "Connection test passed." : "Connection passed; the test message could not be removed.");
+    if (shouldOpenAfterTest) {
+      window.setTimeout(
+        () => leaveFor(`/server?guildId=${encodeURIComponent(guildId)}&botId=${encodeURIComponent(dashboard.activeBotId)}`),
+        260
+      );
+    }
   } catch (error) {
     closeTestDialog();
     showToast(error instanceof Error ? error.message : "The connection test failed.", true);
@@ -364,6 +394,13 @@ async function runGuildTest() {
 }
 
 serverSearch?.addEventListener("input", renderServers);
+botSelector?.addEventListener("change", (event) => {
+  requestedBotId = event.currentTarget.value;
+  const url = new URL(window.location.href);
+  url.searchParams.set("botId", requestedBotId);
+  window.history.replaceState({}, "", url);
+  loadDashboard();
+});
 refreshButton?.addEventListener("click", loadDashboard);
 document.querySelector("[data-dashboard-retry]")?.addEventListener("click", loadDashboard);
 document.querySelector("[data-confirm-test]")?.addEventListener("click", runGuildTest);

@@ -37,6 +37,15 @@
         <div><span>CONNECTED BOT</span><strong data-sidebar-bot-name>Loading...</strong></div>
         <span class="status-pulse" aria-hidden="true"></span>
       </div>
+      <div class="bot-selector-wrap" data-bot-selector-wrap hidden>
+        <label for="dashboard-bot-selector">ACTIVE BOT</label>
+        <div>
+          <select id="dashboard-bot-selector" data-bot-selector aria-label="Active bot"></select>
+          <a class="icon-button" href="/setup?mode=add" data-transition aria-label="Add another bot" title="Add another bot">
+            <i data-lucide="plus" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
 
       <nav class="dashboard-navigation" aria-label="Dashboard navigation">
         <p>WORKSPACE</p>
@@ -130,6 +139,7 @@
             <span>CONNECTED BOT</span>
             <strong data-dashboard-bot-name>Discord bot</strong>
           </div>
+          <span class="bot-count" data-bot-count>1 BOT</span>
           <div class="bot-connection-meta">
             <span>CONFIGURATION</span>
             <strong><i data-lucide="badge-check" aria-hidden="true"></i> Verified</strong>
