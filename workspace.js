@@ -32,6 +32,7 @@ const dmInput = document.querySelector("[data-dm-input]");
 const campaignDialog = document.querySelector("[data-campaign-dialog]");
 const notificationDialog = document.querySelector("[data-notification-dialog]");
 const workspaceBotSelector = document.querySelector("[data-workspace-bot-selector]");
+const mentionSuggestions = document.querySelector("[data-mention-suggestions]");
 
 let workspace = null;
 let selectedChannel = null;
@@ -62,6 +63,11 @@ let notificationSettings = {
 const lastMessageIdByChannel = new Map();
 const lastAlertAt = new Map();
 let lastBackgroundSyncAt = 0;
+let mentionAutocompleteTimer = null;
+let mentionAutocompleteController = null;
+let mentionAutocompleteTrigger = null;
+let mentionAutocompleteMembers = [];
+let mentionAutocompleteIndex = 0;
 
 function apiQuery(values = {}) {
   return new URLSearchParams({ guildId, botId: workspace?.bot?.id || requestedBotId, ...values });
@@ -617,6 +623,120 @@ function insertComposerText(value) {
   updateComposer();
 }
 
+function hideMentionSuggestions() {
+  window.clearTimeout(mentionAutocompleteTimer);
+  mentionAutocompleteController?.abort();
+  mentionAutocompleteController = null;
+  mentionAutocompleteTrigger = null;
+  mentionAutocompleteMembers = [];
+  mentionSuggestions.hidden = true;
+}
+
+function findMentionTrigger() {
+  const cursor = messageInput.selectionStart;
+  const beforeCursor = messageInput.value.slice(0, cursor);
+  const match = beforeCursor.match(/(^|\s)(\/?@)([^\s@<>]{0,32})$/);
+  if (!match) return null;
+  const token = `${match[2]}${match[3]}`;
+  return { start: cursor - token.length, end: cursor, query: match[3] };
+}
+
+function mentionSuggestionAvatar(member) {
+  const avatar = document.createElement("span");
+  avatar.className = "mention-suggestion-avatar";
+  if (member.avatarUrl) {
+    const image = document.createElement("img");
+    image.src = member.avatarUrl;
+    image.alt = "";
+    image.width = 32;
+    image.height = 32;
+    avatar.append(image);
+  } else {
+    avatar.textContent = member.displayName.slice(0, 1).toUpperCase();
+  }
+  return avatar;
+}
+
+function selectMentionSuggestion(member) {
+  const trigger = mentionAutocompleteTrigger || findMentionTrigger();
+  if (!trigger) return;
+  messageInput.setRangeText(`<@${member.id}> `, trigger.start, trigger.end, "end");
+  selectedMentionIds.add(member.id);
+  document.querySelector("[data-mention-policy]").value = "users";
+  hideMentionSuggestions();
+  messageInput.focus();
+  updateComposer();
+}
+
+function renderMentionSuggestions(members) {
+  mentionAutocompleteMembers = members.filter((member) => !member.bot).slice(0, 8);
+  mentionAutocompleteIndex = 0;
+  if (!mentionAutocompleteMembers.length) {
+    hideMentionSuggestions();
+    return;
+  }
+  mentionSuggestions.replaceChildren(...mentionAutocompleteMembers.map((member, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `mention-suggestion${index === mentionAutocompleteIndex ? " is-active" : ""}`;
+    button.setAttribute("role", "option");
+    button.setAttribute("aria-selected", index === mentionAutocompleteIndex ? "true" : "false");
+    const identity = document.createElement("span");
+    const name = document.createElement("strong");
+    name.textContent = member.displayName;
+    const username = document.createElement("small");
+    username.textContent = `@${member.username}`;
+    identity.append(name, username);
+    const action = document.createElement("span");
+    action.textContent = "MENTION";
+    button.append(mentionSuggestionAvatar(member), identity, action);
+    button.addEventListener("mousedown", (event) => event.preventDefault());
+    button.addEventListener("click", () => selectMentionSuggestion(member));
+    return button;
+  }));
+  mentionSuggestions.hidden = false;
+}
+
+function setMentionSuggestionIndex(index) {
+  if (!mentionAutocompleteMembers.length) return;
+  mentionAutocompleteIndex = (index + mentionAutocompleteMembers.length) % mentionAutocompleteMembers.length;
+  [...mentionSuggestions.children].forEach((button, itemIndex) => {
+    const active = itemIndex === mentionAutocompleteIndex;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-selected", active ? "true" : "false");
+    if (active) button.scrollIntoView({ block: "nearest" });
+  });
+}
+
+function queueMentionAutocomplete() {
+  window.clearTimeout(mentionAutocompleteTimer);
+  mentionAutocompleteController?.abort();
+  const trigger = findMentionTrigger();
+  if (!trigger) {
+    hideMentionSuggestions();
+    return;
+  }
+  mentionAutocompleteTrigger = trigger;
+  mentionAutocompleteTimer = window.setTimeout(async () => {
+    mentionAutocompleteController = new AbortController();
+    try {
+      const response = await fetch(`/api/server/members?${apiQuery({ ...(trigger.query ? { query: trigger.query } : {}) })}`, {
+        credentials: "same-origin",
+        headers: { Accept: "application/json" },
+        signal: mentionAutocompleteController.signal,
+      });
+      const payload = await readPayload(response);
+      if (!response.ok) throw new Error(payload.error || "Members could not be searched.");
+      const current = findMentionTrigger();
+      if (!current || current.start !== trigger.start || current.query !== trigger.query) return;
+      renderMentionSuggestions(payload.members || []);
+      refreshIcons();
+    } catch (error) {
+      if (error?.name !== "AbortError") hideMentionSuggestions();
+    }
+  }, 180);
+}
+
 function updateComposer() {
   characterCount.textContent = `${messageInput.value.length.toLocaleString()} / 2,000`;
   if (!sendInProgress) sendButton.disabled = !selectedChannel || messageInput.value.trim().length === 0;
@@ -634,6 +754,22 @@ function setSendBusy(isBusy) {
 async function sendMessage() {
   const content = messageInput.value.trim();
   if (!selectedChannel || !content || sendInProgress) return;
+  const mentionPolicy = document.querySelector("[data-mention-policy]").value;
+  const rawMention = content.match(/(?:^|\s)\/?@([^\s@<>]+)/);
+  if (rawMention && !["everyone", "here"].includes(rawMention[1].toLowerCase())) {
+    showToast("Select the member from the @ suggestions so Discord receives a real user mention.", true);
+    messageInput.focus();
+    queueMentionAutocomplete();
+    return;
+  }
+  if (selectedMentionIds.size && mentionPolicy === "none") {
+    showToast("Change Mention policy to User mentions before sending.", true);
+    return;
+  }
+  if (/@(?:everyone|here)\b/i.test(content) && mentionPolicy !== "all") {
+    showToast("Change Mention policy to All mentions before sending @everyone or @here.", true);
+    return;
+  }
   setSendBusy(true);
 
   try {
@@ -647,7 +783,7 @@ async function sendMessage() {
         channelId: selectedChannel.id,
         content,
         mode: messageMode,
-        mentionPolicy: document.querySelector("[data-mention-policy]").value,
+        mentionPolicy,
         mentionIds: [...selectedMentionIds],
         replyToId: replyTarget?.id || null,
         notifyReplyAuthor: document.querySelector("[data-notify-reply]").checked,
@@ -668,8 +804,18 @@ async function sendMessage() {
       messageList.append(createMessage(payload.message));
     }
     messageStream.scrollTop = messageStream.scrollHeight;
-    const sentLabel = messageMode === "announcement" && payload.published ? "Announcement published." : "Message sent.";
-    showToast(sentLabel);
+    const mentionDelivery = payload.mentionDelivery || {};
+    const mentionMismatch = mentionDelivery.notificationsEnabled
+      && mentionDelivery.requested > mentionDelivery.resolved;
+    let sentLabel = messageMode === "announcement" && payload.published ? "Announcement published." : "Message sent.";
+    if (mentionMismatch) {
+      sentLabel = "Message sent, but Discord could not resolve every requested mention.";
+    } else if (mentionDelivery.notificationsEnabled && mentionDelivery.resolved > 0) {
+      sentLabel = `Message sent with ${mentionDelivery.resolved} member notification${mentionDelivery.resolved === 1 ? "" : "s"}.`;
+    } else if (mentionDelivery.replyNotificationEnabled) {
+      sentLabel = "Reply sent with author notification.";
+    }
+    showToast(sentLabel, mentionMismatch);
     composerStatus.textContent = "Delivered";
     refreshIcons();
   } catch (error) {
@@ -1146,12 +1292,38 @@ document.querySelector("[data-notification-form]")?.addEventListener("submit", (
 messageInput?.addEventListener("input", () => {
   syncMentionIds();
   updateComposer();
+  queueMentionAutocomplete();
 });
 messageInput?.addEventListener("keydown", (event) => {
+  if (!mentionSuggestions.hidden) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setMentionSuggestionIndex(mentionAutocompleteIndex + 1);
+      return;
+    }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setMentionSuggestionIndex(mentionAutocompleteIndex - 1);
+      return;
+    }
+    if (["Enter", "Tab"].includes(event.key) && !event.ctrlKey && !event.metaKey) {
+      event.preventDefault();
+      selectMentionSuggestion(mentionAutocompleteMembers[mentionAutocompleteIndex]);
+      return;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      hideMentionSuggestions();
+      return;
+    }
+  }
   if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
     event.preventDefault();
     sendMessage();
   }
+});
+document.addEventListener("pointerdown", (event) => {
+  if (event.target !== messageInput && !mentionSuggestions.contains(event.target)) hideMentionSuggestions();
 });
 messageForm?.addEventListener("submit", (event) => {
   event.preventDefault();

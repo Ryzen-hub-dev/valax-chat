@@ -14,7 +14,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
-    <link rel="stylesheet" href="./server.css" />
+    <link rel="stylesheet" href="./server.css?v=20260724-mentions" />
   </head>
   <body class="workspace-page page-enter">
     <div class="page-curtain" data-page-curtain aria-hidden="true">
@@ -156,6 +156,7 @@
               <i data-lucide="chevron-down" aria-hidden="true"></i>
             </label>
           </div>
+          <div class="mention-suggestions" data-mention-suggestions role="listbox" aria-label="Member suggestions" hidden></div>
           <div class="composer-input-row">
             <textarea
               data-message-input
@@ -272,6 +273,6 @@
     <span data-year hidden></span>
     <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
     <script type="module" src="./app.js"></script>
-    <script type="module" src="./workspace.js"></script>
+    <script type="module" src="./workspace.js?v=20260724-mentions"></script>
   </body>
 </html>

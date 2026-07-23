@@ -79,6 +79,13 @@ globalThis.fetch = async (input, init = {}) => {
     capturedChannelMessage = JSON.parse(init.body);
     return json({
       ...discordMessage(ids.reply, capturedChannelMessage.content),
+      mentions: (capturedChannelMessage.allowed_mentions?.users || []).map((id) => ({
+        id,
+        username: "member",
+        global_name: "Test Member",
+        avatar: null,
+        bot: false,
+      })),
       referenced_message: discordMessage(ids.message, "Original", ids.recipient),
     });
   }
@@ -199,7 +206,27 @@ try {
   });
   assert.equal(channelSend.status, 200);
   assert.deepEqual(capturedChannelMessage.allowed_mentions.users, [ids.recipient]);
+  assert.equal(capturedChannelMessage.allowed_mentions.replied_user, true);
   assert.equal(capturedChannelMessage.message_reference.message_id, ids.message);
+  assert.equal(channelSend.payload.mentionDelivery.resolved, 1);
+
+  await database.collection("messageLogs").updateMany(
+    { userId: user._id, botId: ids.bot, channelId: ids.channel },
+    { $set: { createdAt: new Date(0) } }
+  );
+  const replyWithoutMentionPolicy = await call("POST", "/api/server/messages", {
+    guildId: ids.guild,
+    botId: ids.bot,
+    channelId: ids.channel,
+    content: "Reply without a separate user mention",
+    mentionPolicy: "none",
+    replyToId: ids.message,
+    notifyReplyAuthor: true,
+  });
+  assert.equal(replyWithoutMentionPolicy.status, 200);
+  assert.deepEqual(capturedChannelMessage.allowed_mentions.parse, []);
+  assert.equal(capturedChannelMessage.allowed_mentions.replied_user, true);
+  assert.equal(replyWithoutMentionPolicy.payload.mentionDelivery.replyNotificationEnabled, true);
 
   const conversation = await call("GET", `/api/server/dm?guildId=${ids.guild}&botId=${ids.bot}&recipientId=${ids.recipient}`);
   assert.equal(conversation.status, 200);
