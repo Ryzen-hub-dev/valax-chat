@@ -4,6 +4,15 @@ const userView = document.querySelector("[data-auth-user]");
 const errorView = document.querySelector("[data-auth-error]");
 const errorMessage = document.querySelector("[data-error-message]");
 const toast = document.querySelector("[data-toast]");
+const params = new URLSearchParams(window.location.search);
+const allowedReturnPaths = new Set(["/setup"]);
+const requestedReturnTo = params.get("returnTo");
+const returnTo = allowedReturnPaths.has(requestedReturnTo) ? requestedReturnTo : "/setup";
+
+const discordLogin = document.querySelector("[data-discord-login]");
+const continueLink = document.querySelector("[data-continue]");
+if (discordLogin) discordLogin.href = `/api/auth/discord?returnTo=${encodeURIComponent(returnTo)}`;
+if (continueLink) continueLink.href = returnTo;
 
 const views = [loadingView, guestView, userView, errorView];
 
@@ -126,7 +135,6 @@ legalDialog?.addEventListener("click", (event) => {
   if (event.target === legalDialog) legalDialog.close();
 });
 
-const params = new URLSearchParams(window.location.search);
 const oauthError = params.get("error");
 if (oauthError) {
   const messages = {
@@ -146,7 +154,7 @@ if (params.get("status") === "success" && toast) {
     toast.classList.add("is-hiding");
     window.setTimeout(() => { toast.hidden = true; }, 250);
   }, 3200);
-  window.history.replaceState({}, "", "/login");
+  window.history.replaceState({}, "", `/login?returnTo=${encodeURIComponent(returnTo)}`);
 }
 
 window.lucide?.createIcons();

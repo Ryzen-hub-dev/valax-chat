@@ -14,6 +14,12 @@
     },
     "api/logout.js": {
       "maxDuration": 15
+    },
+    "api/onboarding/status.js": {
+      "maxDuration": 15
+    },
+    "api/onboarding/bot.js": {
+      "maxDuration": 15
     }
   },
   "headers": [

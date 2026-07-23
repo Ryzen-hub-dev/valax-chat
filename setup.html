@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Connect and verify your Discord bot with Valax." />
+    <meta name="theme-color" content="#0b0b0b" />
+    <title>Bot setup — Valax</title>
+    <link rel="icon" type="image/webp" href="./assets/valax-logo.webp" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./setup.css" />
+  </head>
+  <body class="setup-page page-enter">
+    <div class="page-curtain" data-page-curtain aria-hidden="true">
+      <img src="./assets/valax-logo.webp" alt="" width="64" height="64" />
+    </div>
+
+    <header class="setup-header">
+      <a class="brand" href="/" data-transition aria-label="Valax home">
+        <img src="./assets/valax-logo.webp" alt="" width="44" height="44" />
+        <span>VALAX</span>
+      </a>
+      <div class="setup-header-status">
+        <span class="status-pulse"></span>
+        <span>SECURE SETUP</span>
+      </div>
+      <div class="setup-account" data-setup-account hidden>
+        <div class="setup-account-avatar" data-setup-avatar><i data-lucide="user" aria-hidden="true"></i></div>
+        <div><strong data-setup-name>Discord user</strong><span>Connected</span></div>
+      </div>
+    </header>
+
+    <main class="setup-layout">
+      <aside class="setup-sidebar">
+        <div>
+          <p class="section-index">VALAX ONBOARDING</p>
+          <h1>Bring your bot online.</h1>
+        </div>
+
+        <ol class="setup-progress" aria-label="Setup progress">
+          <li data-progress="account" class="is-complete">
+            <span><i data-lucide="check" aria-hidden="true"></i></span>
+            <div><strong>Discord account</strong><small>Identity verified</small></div>
+          </li>
+          <li data-progress="community">
+            <span>02</span>
+            <div><strong>Valax community</strong><small>Membership check</small></div>
+          </li>
+          <li data-progress="bot">
+            <span>03</span>
+            <div><strong>Bot connection</strong><small>Token and intents</small></div>
+          </li>
+          <li data-progress="complete">
+            <span>04</span>
+            <div><strong>Ready</strong><small>Connection verified</small></div>
+          </li>
+        </ol>
+
+        <div class="sidebar-security">
+          <i data-lucide="lock-keyhole" aria-hidden="true"></i>
+          <p><strong>AES-256-GCM</strong><span>Bot credentials are encrypted before database storage.</span></p>
+        </div>
+      </aside>
+
+      <section class="setup-workspace">
+        <div class="setup-loading" data-setup-loading>
+          <span class="setup-spinner" aria-hidden="true"></span>
+          <div><strong>Loading your workspace</strong><span>Checking Discord and Valax...</span></div>
+        </div>
+
+        <section class="step-panel community-panel" data-step-panel="community" hidden aria-labelledby="community-title">
+          <div class="panel-heading">
+            <p class="section-index">STEP 02 / COMMUNITY ACCESS</p>
+            <h2 id="community-title">Join the ValaxScrub server.</h2>
+            <p>Membership keeps support, product notices, and account verification in one trusted community.</p>
+          </div>
+
+          <div class="community-server">
+            <img
+              src="https://cdn.discordapp.com/icons/1490285060765515946/dc0b20c44964edf1c4160d9c3ca2d699.png?size=128"
+              alt="ValaxScrub server"
+              width="76"
+              height="76"
+            />
+            <div>
+              <p>REQUIRED COMMUNITY</p>
+              <h3>ValaxScrub</h3>
+              <span><span class="status-pulse"></span> Discord server</span>
+            </div>
+            <i data-lucide="badge-check" aria-hidden="true"></i>
+          </div>
+
+          <div class="membership-points">
+            <div><i data-lucide="life-buoy" aria-hidden="true"></i><span><strong>Direct support</strong>Get help with setup and bot connectivity.</span></div>
+            <div><i data-lucide="radio" aria-hidden="true"></i><span><strong>Service notices</strong>See changes that affect your workspace.</span></div>
+            <div><i data-lucide="users" aria-hidden="true"></i><span><strong>Shared community</strong>Connect with other Valax administrators.</span></div>
+          </div>
+
+          <div class="setup-notice setup-notice-warning" data-membership-notice hidden>
+            <i data-lucide="circle-alert" aria-hidden="true"></i>
+            <span>Membership was not found yet. Join the server, then check again.</span>
+          </div>
+
+          <div class="panel-actions">
+            <a class="button button-primary" href="https://discord.gg/md7xrWB2c2" target="_blank" rel="noreferrer">
+              Join ValaxScrub
+              <i data-lucide="external-link" aria-hidden="true"></i>
+            </a>
+            <a
+              class="button button-ghost"
+              href="/api/auth/discord?returnTo=%2Fsetup%3Fchecked%3D1&prompt=none"
+              data-transition
+            >
+              Check membership
+              <i data-lucide="refresh-cw" aria-hidden="true"></i>
+            </a>
+          </div>
+        </section>
+
+        <section class="step-panel bot-panel" data-step-panel="bot" hidden aria-labelledby="bot-title">
+          <div class="panel-heading">
+            <p class="section-index">STEP 03 / BOT CONNECTION</p>
+            <h2 id="bot-title">Connect your Discord bot.</h2>
+            <p>Prepare the application in Discord, then let Valax verify the bot before anything is stored.</p>
+          </div>
+
+          <div class="bot-setup-grid">
+            <div class="developer-checklist">
+              <div class="checklist-heading">
+                <span>DISCORD DEVELOPER PORTAL</span>
+                <a href="https://discord.com/developers/applications" target="_blank" rel="noreferrer">
+                  Open portal <i data-lucide="external-link" aria-hidden="true"></i>
+                </a>
+              </div>
+              <ol>
+                <li><span>01</span><div><strong>Create or open an application</strong><p>Select <b>Bot</b> in the application sidebar.</p></div></li>
+                <li><span>02</span><div><strong>Enable all privileged intents</strong><p>Presence, Server Members, and Message Content must be on.</p></div></li>
+                <li><span>03</span><div><strong>Reset and copy the token</strong><p>Paste the new token below. Discord only shows it once.</p></div></li>
+              </ol>
+            </div>
+
+            <form class="bot-verifier" data-bot-form>
+              <div class="verifier-heading">
+                <span class="verifier-icon"><i data-lucide="bot" aria-hidden="true"></i></span>
+                <div><p>SERVER-SIDE CHECK</p><h3>Verify bot token</h3></div>
+              </div>
+              <label for="bot-token">Bot token</label>
+              <div class="token-input">
+                <input
+                  id="bot-token"
+                  name="token"
+                  type="password"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="Paste your bot token"
+                  required
+                />
+                <button type="button" data-toggle-token aria-label="Show token" title="Show token">
+                  <i data-lucide="eye" aria-hidden="true"></i>
+                </button>
+              </div>
+              <p class="token-privacy"><i data-lucide="shield-check" aria-hidden="true"></i> Never stored in this browser or written to logs.</p>
+              <button class="verify-button" type="submit" data-verify-button>
+                <i data-lucide="scan-search" aria-hidden="true"></i>
+                Verify and connect
+              </button>
+              <div class="setup-notice setup-notice-error" data-bot-error hidden>
+                <i data-lucide="circle-alert" aria-hidden="true"></i>
+                <span data-bot-error-message>Discord could not verify this token.</span>
+              </div>
+            </form>
+          </div>
+
+          <section class="verification-results" data-verification-results hidden aria-labelledby="results-title">
+            <div class="results-heading">
+              <div class="verified-bot-avatar" data-bot-avatar><i data-lucide="bot" aria-hidden="true"></i></div>
+              <div><p>CONNECTED BOT</p><h3 id="results-title" data-bot-name>Discord bot</h3></div>
+              <button class="icon-button" type="button" data-recheck-bot aria-label="Recheck bot" title="Recheck bot">
+                <i data-lucide="refresh-cw" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <div class="diagnostic-grid">
+              <div class="diagnostic-group">
+                <p>PRIVILEGED INTENTS</p>
+                <div class="diagnostic-row" data-intent="presence"><span>Presence Intent</span><strong>Pending</strong></div>
+                <div class="diagnostic-row" data-intent="members"><span>Server Members Intent</span><strong>Pending</strong></div>
+                <div class="diagnostic-row" data-intent="messageContent"><span>Message Content Intent</span><strong>Pending</strong></div>
+              </div>
+              <div class="diagnostic-group">
+                <p>SERVER ACCESS</p>
+                <div class="diagnostic-row" data-diagnostic="server"><span>Connected server</span><strong>Pending</strong></div>
+                <div class="diagnostic-row" data-diagnostic="administrator"><span>Administrator permission</span><strong>Pending</strong></div>
+              </div>
+            </div>
+
+            <div class="guild-results" data-guild-results></div>
+
+            <div class="result-actions" data-result-actions hidden>
+              <p data-result-guidance>Complete the missing Discord settings, then recheck the bot.</p>
+              <a class="button button-primary" data-bot-invite href="#" target="_blank" rel="noreferrer" hidden>
+                Add bot with Administrator
+                <i data-lucide="external-link" aria-hidden="true"></i>
+              </a>
+              <a class="button button-ghost" href="https://discord.com/developers/applications" target="_blank" rel="noreferrer">
+                Open developer portal
+                <i data-lucide="external-link" aria-hidden="true"></i>
+              </a>
+            </div>
+          </section>
+        </section>
+
+        <section class="step-panel complete-panel" data-step-panel="complete" hidden aria-labelledby="complete-title">
+          <div class="complete-mark"><i data-lucide="check" aria-hidden="true"></i></div>
+          <p class="section-index">SETUP COMPLETE</p>
+          <h2 id="complete-title">Your bot is ready for Valax.</h2>
+          <p>The identity, privileged intents, server access, and Administrator permission have all been verified.</p>
+
+          <div class="complete-summary">
+            <div class="verified-bot-avatar" data-complete-avatar><i data-lucide="bot" aria-hidden="true"></i></div>
+            <div><span>CONNECTED BOT</span><strong data-complete-bot>Discord bot</strong></div>
+            <div><span>AVAILABLE SERVERS</span><strong data-complete-guilds>0</strong></div>
+            <span class="ready-badge"><span class="status-pulse"></span> Ready</span>
+          </div>
+
+          <div class="panel-actions">
+            <a class="button button-primary" href="/" data-transition>
+              Return home
+              <i data-lucide="arrow-right" aria-hidden="true"></i>
+            </a>
+            <button class="button button-ghost" type="button" data-review-connection>
+              Review connection
+              <i data-lucide="settings-2" aria-hidden="true"></i>
+            </button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <span data-year hidden></span>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script type="module" src="./app.js"></script>
+    <script type="module" src="./setup.js"></script>
+  </body>
+</html>
+
