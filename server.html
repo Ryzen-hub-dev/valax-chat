@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Read Discord channels and send messages through your Valax bot." />
+    <meta name="theme-color" content="#0b0b0b" />
+    <title>Server workspace - Valax</title>
+    <link rel="icon" type="image/webp" href="./assets/valax-logo.webp" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./server.css" />
+  </head>
+  <body class="workspace-page page-enter">
+    <div class="page-curtain" data-page-curtain aria-hidden="true">
+      <img src="./assets/valax-logo.webp" alt="" width="64" height="64" />
+    </div>
+
+    <button class="workspace-menu-button" type="button" data-workspace-menu aria-label="Open server navigation" title="Open server navigation">
+      <i data-lucide="panel-left" aria-hidden="true"></i>
+    </button>
+    <button class="workspace-scrim" type="button" data-workspace-scrim aria-label="Close server navigation" hidden></button>
+
+    <aside class="workspace-sidebar" data-workspace-sidebar>
+      <div class="server-rail">
+        <a class="rail-brand" href="/dashboard" data-transition aria-label="Valax dashboard" title="Dashboard">
+          <img src="./assets/valax-logo.webp" alt="" width="42" height="42" />
+        </a>
+        <span class="rail-divider"></span>
+        <nav class="rail-servers" data-rail-servers aria-label="Available Discord servers"></nav>
+        <a class="rail-action" href="/dashboard" data-transition aria-label="Server overview" title="Server overview">
+          <i data-lucide="layout-dashboard" aria-hidden="true"></i>
+        </a>
+      </div>
+
+      <div class="channel-sidebar">
+        <header class="channel-server-header">
+          <div class="channel-server-avatar" data-server-avatar><i data-lucide="server" aria-hidden="true"></i></div>
+          <div><span>DISCORD SERVER</span><strong data-server-name>Loading...</strong></div>
+          <span class="status-pulse" aria-hidden="true"></span>
+        </header>
+
+        <div class="channel-list" data-channel-list>
+          <div class="channel-list-loading">
+            <span class="workspace-spinner"></span>
+            <span>Loading channels</span>
+          </div>
+        </div>
+
+        <footer class="channel-bot-footer">
+          <div class="channel-bot-avatar" data-bot-avatar><i data-lucide="bot" aria-hidden="true"></i></div>
+          <div><span>CONNECTED AS</span><strong data-bot-name>Discord bot</strong></div>
+          <a class="channel-settings" href="/setup" data-transition aria-label="Bot settings" title="Bot settings">
+            <i data-lucide="settings-2" aria-hidden="true"></i>
+          </a>
+        </footer>
+      </div>
+    </aside>
+
+    <main class="chat-shell">
+      <header class="chat-header">
+        <div class="chat-channel-heading">
+          <i data-channel-icon data-lucide="hash" aria-hidden="true"></i>
+          <div><strong data-channel-name>Select a channel</strong><span data-channel-topic>Choose a text channel to begin.</span></div>
+        </div>
+        <div class="chat-header-actions">
+          <div class="message-mode" data-message-mode role="group" aria-label="Message type">
+            <button class="is-active" type="button" data-mode="message">
+              <i data-lucide="message-square" aria-hidden="true"></i>
+              Message
+            </button>
+            <button type="button" data-mode="announcement">
+              <i data-lucide="megaphone" aria-hidden="true"></i>
+              Announcement
+            </button>
+          </div>
+          <button class="icon-button" type="button" data-refresh-messages aria-label="Refresh messages" title="Refresh messages">
+            <i data-lucide="refresh-cw" aria-hidden="true"></i>
+          </button>
+          <button class="icon-button" type="button" data-workspace-logout aria-label="Sign out" title="Sign out">
+            <i data-lucide="log-out" aria-hidden="true"></i>
+          </button>
+        </div>
+      </header>
+
+      <section class="chat-status" data-chat-status>
+        <span class="workspace-spinner"></span>
+        <div><strong>Opening server workspace</strong><span>Synchronizing channels and recent messages...</span></div>
+      </section>
+
+      <section class="workspace-error" data-workspace-error hidden>
+        <i data-lucide="triangle-alert" aria-hidden="true"></i>
+        <div><strong>Workspace unavailable</strong><span data-workspace-error-message>Valax could not load this server.</span></div>
+        <button class="button button-primary" type="button" data-workspace-retry>Try again</button>
+        <a class="button button-ghost" href="/dashboard" data-transition>Return to dashboard</a>
+      </section>
+
+      <div class="chat-workspace" data-chat-workspace hidden>
+        <section class="message-stream" data-message-stream aria-live="polite">
+          <div class="message-loading" data-message-loading>
+            <span class="workspace-spinner"></span>
+            <span>Loading recent messages...</span>
+          </div>
+          <div class="message-empty" data-message-empty hidden>
+            <i data-lucide="messages-square" aria-hidden="true"></i>
+            <strong>No messages yet</strong>
+            <span>Start the conversation with your Valax bot.</span>
+          </div>
+          <div class="message-list" data-message-list></div>
+        </section>
+
+        <form class="message-composer" data-message-form>
+          <div class="composer-mode-banner" data-composer-mode-banner hidden>
+            <i data-lucide="megaphone" aria-hidden="true"></i>
+            <span data-composer-mode-text>Announcement mode</span>
+          </div>
+          <div class="composer-tools">
+            <div class="dynamic-tokens" aria-label="Dynamic values">
+              <button type="button" data-token="/date">/date</button>
+              <button type="button" data-token="/time">/time</button>
+              <button type="button" data-token="/server">/server</button>
+            </div>
+            <label class="mention-policy">
+              <i data-lucide="at-sign" aria-hidden="true"></i>
+              <span class="sr-only">Mention policy</span>
+              <select data-mention-policy aria-label="Mention policy">
+                <option value="none">Mentions off</option>
+                <option value="users">User mentions</option>
+                <option value="all">All mentions</option>
+              </select>
+              <i data-lucide="chevron-down" aria-hidden="true"></i>
+            </label>
+          </div>
+          <div class="composer-input-row">
+            <textarea
+              data-message-input
+              rows="3"
+              maxlength="2000"
+              placeholder="Write a message as your bot..."
+              aria-label="Message content"
+            ></textarea>
+            <button class="composer-send" type="submit" data-send-message aria-label="Send message" title="Send message">
+              <i data-lucide="send" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="composer-footer">
+            <span data-composer-status>Ready</span>
+            <span data-character-count>0 / 2,000</span>
+          </div>
+        </form>
+      </div>
+    </main>
+
+    <div class="workspace-toast" data-workspace-toast role="status" hidden>
+      <i data-workspace-toast-icon data-lucide="circle-check" aria-hidden="true"></i>
+      <span data-workspace-toast-message>Message sent.</span>
+    </div>
+
+    <span data-year hidden></span>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script type="module" src="./app.js"></script>
+    <script type="module" src="./workspace.js"></script>
+  </body>
+</html>

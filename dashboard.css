@@ -583,7 +583,7 @@
 .server-table-head,
 .server-row {
   display: grid;
-  grid-template-columns: minmax(220px, 1.35fr) minmax(115px, 0.7fr) minmax(120px, 0.7fr) minmax(120px, 0.65fr) 88px;
+  grid-template-columns: minmax(220px, 1.35fr) minmax(115px, 0.7fr) minmax(120px, 0.7fr) minmax(120px, 0.65fr) 126px;
   align-items: center;
   gap: 18px;
 }
@@ -722,6 +722,31 @@
   font-weight: 700;
   cursor: pointer;
   transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.server-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.server-action.is-open {
+  border-color: var(--yellow);
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+.server-action.is-open:hover {
+  border-color: #fff273;
+  background: #fff273;
+  color: var(--ink);
+}
+
+.server-action.is-icon {
+  min-width: 34px;
+  width: 34px;
+  padding: 0;
 }
 
 .server-action:hover {
@@ -897,7 +922,7 @@
 
   .server-table-head,
   .server-row {
-    grid-template-columns: minmax(190px, 1.2fr) 105px 110px 105px 78px;
+    grid-template-columns: minmax(190px, 1.2fr) 105px 110px 105px 126px;
     gap: 12px;
   }
 }
@@ -1052,7 +1077,7 @@
     grid-column: 1 / -1;
   }
 
-  .server-row > .server-action {
+  .server-row > .server-actions {
     grid-column: 2;
     justify-self: end;
   }

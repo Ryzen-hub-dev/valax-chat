@@ -20,6 +20,13 @@ The `/dashboard` workspace synchronizes the connected Bot server list from Disco
 can run an explicit connection test for each server; Valax sends one notification-suppressed test
 message, removes it immediately, and stores only the server, channel, result, and timestamp.
 
+After a server passes its connection test, `/server` provides the channel workspace. It loads recent
+Discord messages, displays image and file attachments, and sends standard messages or announcements
+through the connected Bot. Announcement channels support Discord crossposting. Dynamic `/date`,
+`/time`, and `/server` values are resolved on the server, and mention parsing is disabled by default.
+Message audit records contain delivery metadata only and expire after 90 days; message content is not
+stored in MongoDB.
+
 ## Authentication configuration
 
 Create `.env.local` from `.env.example`, then add the Discord OAuth2 application and MongoDB Atlas

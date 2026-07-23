@@ -26,6 +26,12 @@
     },
     "api/dashboard/test.js": {
       "maxDuration": 15
+    },
+    "api/server.js": {
+      "maxDuration": 15
+    },
+    "api/server/messages.js": {
+      "maxDuration": 15
     }
   },
   "headers": [

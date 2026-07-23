@@ -189,22 +189,47 @@ function createServerRow(guild) {
   channel.textContent = guild.testChannel ? `#${guild.testChannel.name}` : "No channel selected";
   lastTest.append(lastTestTime, channel);
 
-  let action;
+  const action = document.createElement("div");
+  action.className = "server-actions";
   if (guild.administrator) {
-    action = document.createElement("button");
-    action.type = "button";
-    action.className = "server-action";
-    action.title = guild.available ? "Run connection test again" : "Run connection test";
-    action.append(icon(guild.available ? "refresh-cw" : "radio-tower"), guild.available ? "Retest" : "Test");
-    action.addEventListener("click", () => openTestDialog(guild.id));
+    if (guild.available) {
+      const open = document.createElement("a");
+      open.className = "server-action is-open";
+      open.href = `/server?guildId=${encodeURIComponent(guild.id)}`;
+      open.append(icon("arrow-right"), "Open");
+      open.addEventListener("click", (event) => {
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        leaveFor(open.href);
+      });
+      action.append(open);
+
+      const retest = document.createElement("button");
+      retest.type = "button";
+      retest.className = "server-action is-icon";
+      retest.title = "Run connection test again";
+      retest.setAttribute("aria-label", "Run connection test again");
+      retest.append(icon("refresh-cw"));
+      retest.addEventListener("click", () => openTestDialog(guild.id));
+      action.append(retest);
+    } else {
+      const test = document.createElement("button");
+      test.type = "button";
+      test.className = "server-action";
+      test.title = "Run connection test";
+      test.append(icon("radio-tower"), "Test");
+      test.addEventListener("click", () => openTestDialog(guild.id));
+      action.append(test);
+    }
   } else {
-    action = document.createElement("a");
-    action.className = "server-action is-fix";
-    action.href = botInviteForGuild(guild.id);
-    action.target = "_blank";
-    action.rel = "noreferrer";
-    action.title = "Grant Administrator permission";
-    action.append(icon("wrench"), "Fix");
+    const fix = document.createElement("a");
+    fix.className = "server-action is-fix";
+    fix.href = botInviteForGuild(guild.id);
+    fix.target = "_blank";
+    fix.rel = "noreferrer";
+    fix.title = "Grant Administrator permission";
+    fix.append(icon("wrench"), "Fix");
+    action.append(fix);
   }
 
   row.append(identity, createPermission(guild), createStatus(guild), lastTest, action);
