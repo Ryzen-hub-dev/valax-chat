@@ -84,6 +84,7 @@ let expressionsLoading = false;
 let expressionTarget = "message";
 let expressionTab = "emoji";
 let selectedStickers = [];
+const expressionSaveInProgress = new Set();
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 const ALLOWED_UPLOAD_TYPES = new Set([
   "image/avif",
@@ -356,7 +357,7 @@ function safeMediaUrl(value) {
   }
 }
 
-function appendDiscordContent(container, message) {
+function appendDiscordContent(container, message, allowSaveExpressions = true) {
   const source = message.content || "";
   const mentions = new Map((message.mentions || []).map((mention) => [mention.id, mention.displayName]));
   const pattern = /<(a?):([a-zA-Z0-9_]{1,32}):(\d{17,20})>|<@!?(\d{17,20})>/g;
@@ -370,7 +371,22 @@ function appendDiscordContent(container, message) {
       image.alt = `:${match[2]}:`;
       image.title = `:${match[2]}:`;
       image.loading = "lazy";
-      container.append(image);
+      if (allowSaveExpressions) {
+        const save = document.createElement("button");
+        save.type = "button";
+        save.className = "message-expression-save";
+        save.title = `Save :${match[2]}: to Saved Expressions`;
+        save.setAttribute("aria-label", `Save ${match[2]} to Saved Expressions`);
+        save.append(image);
+        save.addEventListener("click", () => saveObservedExpression({
+          id: match[3],
+          type: "emoji",
+          name: match[2],
+        }, message));
+        container.append(save);
+      } else {
+        container.append(image);
+      }
     } else {
       const mention = document.createElement("span");
       mention.className = "message-mention";
@@ -420,7 +436,7 @@ function createAttachment(attachment) {
   return link;
 }
 
-function createSticker(sticker) {
+function createSticker(sticker, message, allowSaveExpressions = true) {
   const url = safeMediaUrl(sticker.url);
   if (!url) return document.createTextNode(sticker.name || "Discord sticker");
   const image = document.createElement("img");
@@ -429,7 +445,19 @@ function createSticker(sticker) {
   image.alt = sticker.name || "Discord sticker";
   image.title = sticker.name || "Discord sticker";
   image.loading = "lazy";
-  return image;
+  if (!allowSaveExpressions) return image;
+  const save = document.createElement("button");
+  save.type = "button";
+  save.className = "message-sticker-save";
+  save.title = `Save ${sticker.name || "sticker"} to Saved Expressions`;
+  save.setAttribute("aria-label", `Save ${sticker.name || "sticker"} to Saved Expressions`);
+  save.append(image);
+  save.addEventListener("click", () => saveObservedExpression({
+    id: sticker.id,
+    type: "sticker",
+    name: sticker.name,
+  }, message));
+  return save;
 }
 
 function createEmbed(embed) {
@@ -479,7 +507,7 @@ function createEmbed(embed) {
   return block;
 }
 
-function createMessage(message, { allowReply = true } = {}) {
+function createMessage(message, { allowReply = true, allowSaveExpressions = true } = {}) {
   const row = document.createElement("article");
   row.className = "discord-message";
   row.dataset.messageId = message.id;
@@ -532,7 +560,7 @@ function createMessage(message, { allowReply = true } = {}) {
   if (message.content) {
     const content = document.createElement("p");
     content.className = "message-content";
-    appendDiscordContent(content, message);
+    appendDiscordContent(content, message, allowSaveExpressions);
     body.append(content);
   }
   if ((message.attachments || []).length) {
@@ -544,7 +572,7 @@ function createMessage(message, { allowReply = true } = {}) {
   if ((message.stickers || []).length) {
     const stickers = document.createElement("div");
     stickers.className = "message-stickers";
-    stickers.append(...message.stickers.map(createSticker));
+    stickers.append(...message.stickers.map((sticker) => createSticker(sticker, message, allowSaveExpressions)));
     body.append(stickers);
   }
   (message.embeds || []).forEach((embed) => body.append(createEmbed(embed)));
@@ -973,29 +1001,102 @@ async function loadExpressions() {
   if (expressions || expressionsLoading) return;
   expressionsLoading = true;
   try {
-    const response = await fetch(`/api/server/expressions?${apiQuery()}`, {
-      credentials: "same-origin",
-      headers: { Accept: "application/json" },
-    });
-    const payload = await readPayload(response);
-    if (routeForApiError(response, payload)) return;
-    if (!response.ok) throw new Error(payload.error || "Server expressions could not be loaded.");
-    expressions = payload;
+    const [serverResponse, libraryResponse] = await Promise.all([
+      fetch(`/api/server/expressions?${apiQuery()}`, {
+        credentials: "same-origin",
+        headers: { Accept: "application/json" },
+      }),
+      fetch(`/api/server/expression-library?${apiQuery()}`, {
+        credentials: "same-origin",
+        headers: { Accept: "application/json" },
+      }),
+    ]);
+    const [serverPayload, libraryPayload] = await Promise.all([
+      readPayload(serverResponse),
+      readPayload(libraryResponse),
+    ]);
+    if (routeForApiError(serverResponse, serverPayload) || routeForApiError(libraryResponse, libraryPayload)) return;
+    if (!serverResponse.ok) throw new Error(serverPayload.error || "Server expressions could not be loaded.");
+    if (!libraryResponse.ok) throw new Error(libraryPayload.error || "Saved Expressions could not be loaded.");
+    expressions = { ...serverPayload, saved: libraryPayload.expressions || [] };
   } catch (error) {
     showToast(error instanceof Error ? error.message : "Server expressions could not be loaded.", true);
-    expressions = { emojis: [], stickers: [], permissions: {} };
+    expressions = { emojis: [], stickers: [], saved: [], permissions: {} };
   } finally {
     expressionsLoading = false;
     renderExpressions();
   }
 }
 
+async function saveObservedExpression(expression, message) {
+  if (!selectedChannel || !message?.id) return;
+  const key = `${expression.type}:${expression.id}`;
+  if (expressionSaveInProgress.has(key)) return;
+  expressionSaveInProgress.add(key);
+  try {
+    const response = await fetch("/api/server/expression-library", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({
+        guildId,
+        botId: workspace.bot.id,
+        channelId: selectedChannel.id,
+        messageId: message.id,
+        expressionId: expression.id,
+        type: expression.type,
+      }),
+    });
+    const payload = await readPayload(response);
+    if (routeForApiError(response, payload)) return;
+    if (!response.ok) throw new Error(payload.error || "The expression could not be saved.");
+    if (expressions) {
+      expressions.saved = [
+        payload.expression,
+        ...(expressions.saved || []).filter((item) => !(item.type === payload.expression.type && item.id === payload.expression.id)),
+      ];
+      if (expressionDialog.open && expressionTab === "saved") renderExpressions();
+    }
+    showToast(payload.alreadySaved ? `${payload.expression.name} is already saved.` : `${payload.expression.name} saved to Valax.`);
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "The expression could not be saved.", true);
+  } finally {
+    expressionSaveInProgress.delete(key);
+  }
+}
+
+async function removeSavedExpression(expression) {
+  try {
+    const response = await fetch(`/api/server/expression-library?${apiQuery()}`, {
+      method: "DELETE",
+      credentials: "same-origin",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ type: expression.type, expressionId: expression.id }),
+    });
+    const payload = await readPayload(response);
+    if (!response.ok) throw new Error(payload.error || "The saved expression could not be removed.");
+    expressions.saved = expressions.saved.filter((item) => !(item.type === expression.type && item.id === expression.id));
+    renderExpressions();
+    showToast(`${expression.name} removed from Saved Expressions.`);
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "The saved expression could not be removed.", true);
+  }
+}
+
 function chooseExpression(expression) {
-  if (expressionTab === "emoji") {
+  const type = expressionTab === "saved" ? expression.type : expressionTab;
+  if (type === "emoji") {
     const markup = `<${expression.animated ? "a" : ""}:${expression.name}:${expression.id}>`;
     if (expressionTarget === "dm") insertInto(dmInput, markup);
     else insertComposerText(markup);
     closeDialog(expressionDialog);
+    if (expression.access === "discord-controlled") {
+      showToast("Expression inserted. Discord will verify this Bot's access when it sends.");
+    }
+    return;
+  }
+  if (expressionTarget === "dm") {
+    showToast("Discord server stickers can only be selected for a server channel message.", true);
     return;
   }
   if (selectedStickers.some((sticker) => sticker.id === expression.id)) {
@@ -1009,6 +1110,9 @@ function chooseExpression(expression) {
   renderSelectedStickers();
   updateComposer();
   closeDialog(expressionDialog);
+  if (expression.access === "discord-controlled") {
+    showToast("Sticker selected. Discord will verify this Bot's access when it sends.");
+  }
 }
 
 function renderExpressions() {
@@ -1018,18 +1122,26 @@ function renderExpressions() {
     return;
   }
   const query = expressionSearch.value.trim().toLowerCase();
-  const source = expressionTab === "sticker" ? expressions.stickers : expressions.emojis;
+  const source = expressionTab === "saved"
+    ? expressions.saved
+    : expressionTab === "sticker"
+      ? expressions.stickers
+      : expressions.emojis;
   const items = source.filter((item) => item.name.toLowerCase().includes(query));
   if (!items.length) {
     const empty = document.createElement("div");
     empty.className = "dialog-loading";
     empty.textContent = expressionTab === "sticker" && expressions.permissions?.stickers === false
       ? "Discord denied access to server stickers. Verify the bot role permissions."
-      : `No ${expressionTab === "sticker" ? "stickers" : "emoji"} found.`;
+      : expressionTab === "saved"
+        ? "No saved expressions yet. Click an emoji or sticker in a server message to add it."
+        : `No ${expressionTab === "sticker" ? "stickers" : "emoji"} found.`;
     expressionGrid.replaceChildren(empty);
     return;
   }
   expressionGrid.replaceChildren(...items.map((item) => {
+    const wrapper = document.createElement("div");
+    wrapper.className = `expression-item${item.access === "discord-controlled" ? " is-discord-controlled" : ""}`;
     const button = document.createElement("button");
     button.type = "button";
     button.title = item.name;
@@ -1042,14 +1154,29 @@ function renderExpressions() {
     name.textContent = item.name;
     button.append(image, name);
     button.addEventListener("click", () => chooseExpression(item));
-    return button;
+    wrapper.append(button);
+    if (expressionTab === "saved") {
+      const access = document.createElement("small");
+      access.textContent = item.access === "available" ? "READY" : "DISCORD CHECK";
+      wrapper.append(access);
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "expression-remove";
+      remove.title = `Remove ${item.name}`;
+      remove.setAttribute("aria-label", `Remove ${item.name}`);
+      remove.append(icon("x"));
+      remove.addEventListener("click", () => removeSavedExpression(item));
+      wrapper.append(remove);
+    }
+    return wrapper;
   }));
+  refreshIcons();
 }
 
 function openExpressionPicker(target) {
   expressionTarget = target;
   expressionTab = "emoji";
-  expressionDialog.classList.toggle("emoji-only", target === "dm");
+  expressionDialog.classList.toggle("dm-expression", target === "dm");
   expressionSearch.value = "";
   document.querySelectorAll("[data-expression-tab]").forEach((button) => {
     button.classList.toggle("is-active", button.dataset.expressionTab === "emoji");
@@ -1325,11 +1452,11 @@ async function loadDirectConversation({ quiet = false } = {}) {
     if (quiet) {
       payload.messages.forEach((message) => {
         if (!dmMessageList.querySelector(`[data-message-id="${message.id}"]`)) {
-          dmMessageList.append(createMessage(message, { allowReply: false }));
+          dmMessageList.append(createMessage(message, { allowReply: false, allowSaveExpressions: false }));
         }
       });
     } else {
-      dmMessageList.replaceChildren(...payload.messages.map((message) => createMessage(message, { allowReply: false })));
+      dmMessageList.replaceChildren(...payload.messages.map((message) => createMessage(message, { allowReply: false, allowSaveExpressions: false })));
     }
     const optOut = document.querySelector("[data-dm-opt-out]");
     if (payload.optedOut !== null) {

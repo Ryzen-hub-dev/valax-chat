@@ -696,6 +696,32 @@
   object-fit: contain;
 }
 
+.message-expression-save,
+.message-sticker-save {
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  outline: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.message-expression-save {
+  display: inline-grid;
+  vertical-align: middle;
+}
+
+.message-expression-save:hover,
+.message-expression-save:focus-visible,
+.message-sticker-save:hover,
+.message-sticker-save:focus-visible {
+  box-shadow: 0 0 0 2px var(--yellow);
+}
+
+.message-sticker-save {
+  display: grid;
+}
+
 .message-mention {
   padding: 1px 3px;
   border-radius: 2px;
@@ -1646,12 +1672,12 @@
 
 .expression-tabs {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   border-bottom: 1px solid var(--line);
 }
 
-.expression-dialog.emoji-only .expression-tabs {
-  grid-template-columns: 1fr;
+.expression-dialog.dm-expression .expression-tabs {
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .expression-tabs button {
@@ -1688,8 +1714,15 @@
   background: var(--line);
 }
 
-.expression-grid > button {
+.expression-item {
+  position: relative;
+  min-width: 0;
+  background: #131313;
+}
+
+.expression-item > button:first-child {
   display: grid;
+  width: 100%;
   min-width: 0;
   min-height: 92px;
   grid-template-rows: 56px 16px;
@@ -1702,9 +1735,52 @@
   cursor: pointer;
 }
 
-.expression-grid > button:hover {
+.expression-item > button:first-child:hover {
   background: #1c1c19;
   color: var(--paper);
+}
+
+.expression-item > small {
+  display: block;
+  min-height: 18px;
+  padding: 0 5px 5px;
+  color: #7a9e78;
+  font-family: "DM Mono", monospace;
+  font-size: 6px;
+  text-align: center;
+}
+
+.expression-item.is-discord-controlled > small {
+  color: #c2ac68;
+}
+
+.expression-remove {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: grid;
+  width: 23px;
+  height: 23px;
+  place-items: center;
+  border: 0;
+  border-radius: 3px;
+  background: rgba(8, 8, 8, 0.78);
+  color: #777771;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.expression-item:hover .expression-remove,
+.expression-item:focus-within .expression-remove {
+  opacity: 1;
+}
+
+.expression-remove:hover {
+  color: #ef7770;
+}
+
+.expression-remove svg {
+  width: 12px;
 }
 
 .expression-grid img {
@@ -1713,7 +1789,7 @@
   object-fit: contain;
 }
 
-.expression-grid button span {
+.expression-item > button:first-child span {
   width: 100%;
   overflow: hidden;
   font-size: 7px;

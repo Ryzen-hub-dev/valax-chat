@@ -32,6 +32,13 @@ crossposting. Dynamic `/date`,
 Message audit records contain delivery metadata only and expire after 90 days; message content is not
 stored in MongoDB.
 
+Custom emoji and stickers shown in a server message can be saved directly to the account-level Valax
+Saved Expressions library. A save is accepted only after the API reloads the original channel message
+from Discord and verifies the expression ID. The library stores references and source metadata, not
+copied artwork, and is shared only across Bot connections owned by the same Valax account. Discord
+still enforces source-server access, external-expression permissions, premium sticker availability,
+and Nitro entitlements at send time; Valax does not bypass or emulate Discord Nitro.
+
 The server workspace also includes a searchable member directory, explicit user mentions, Discord
 message replies, one-to-one Bot DMs, one-click private messages from a channel author, and a recent
 conversation shortcut list. Recent conversation records contain only participant identity and activity

@@ -14,7 +14,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
-    <link rel="stylesheet" href="./server.css?v=20260724-media" />
+    <link rel="stylesheet" href="./server.css?v=20260724-library" />
   </head>
   <body class="workspace-page page-enter">
     <div class="page-curtain" data-page-curtain aria-hidden="true">
@@ -236,12 +236,13 @@
 
     <dialog class="workspace-dialog expression-dialog" data-expression-dialog>
       <header class="workspace-dialog-header">
-        <div><span>SERVER EXPRESSIONS</span><h2>Emoji &amp; stickers</h2></div>
+        <div><span>VALAX EXPRESSIONS</span><h2>Emoji, stickers &amp; saved</h2></div>
         <button class="icon-button" type="button" data-close-expressions aria-label="Close expressions" title="Close expressions"><i data-lucide="x" aria-hidden="true"></i></button>
       </header>
       <div class="expression-tabs" role="tablist" aria-label="Expression type">
         <button class="is-active" type="button" role="tab" data-expression-tab="emoji">Emoji</button>
         <button type="button" role="tab" data-expression-tab="sticker">Stickers</button>
+        <button type="button" role="tab" data-expression-tab="saved">Saved</button>
       </div>
       <label class="dialog-search">
         <i data-lucide="search" aria-hidden="true"></i>
@@ -316,6 +317,6 @@
     <span data-year hidden></span>
     <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
     <script type="module" src="./app.js"></script>
-    <script type="module" src="./workspace.js?v=20260724-media"></script>
+    <script type="module" src="./workspace.js?v=20260724-library"></script>
   </body>
 </html>

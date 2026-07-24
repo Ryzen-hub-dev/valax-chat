@@ -84,6 +84,9 @@ globalThis.fetch = async (input, init = {}) => {
   if (path === `/api/v10/guilds/${ids.guild}/stickers`) {
     return json([{ id: ids.sticker, name: "Valax hello", description: "Hello", format_type: 2, available: true }]);
   }
+  if (path === `/api/v10/stickers/${ids.sticker}`) {
+    return json({ id: ids.sticker, guild_id: ids.guild, name: "Valax hello", description: "Hello", format_type: 2, available: true });
+  }
   if (path.startsWith(`/api/v10/guilds/${ids.guild}/members/search`)) return json([member]);
   if (path.startsWith(`/api/v10/guilds/${ids.guild}/members?`)) return json([member]);
   if (path === `/api/v10/guilds/${ids.guild}/members/${ids.recipient}`) return json(member);
@@ -92,6 +95,12 @@ globalThis.fetch = async (input, init = {}) => {
   }
   if (path.startsWith(`/api/v10/channels/${ids.channel}/messages?`)) {
     return json([discordMessage(ids.message, "Recent message", ids.recipient)]);
+  }
+  if (path === `/api/v10/channels/${ids.channel}/messages/${ids.message}`) {
+    return json({
+      ...discordMessage(ids.message, `<a:valax_wave:${ids.emoji}>`, ids.recipient),
+      sticker_items: [{ id: ids.sticker, name: "Valax hello", format_type: 2 }],
+    });
   }
   if (path === `/api/v10/channels/${ids.channel}/messages` && method === "POST") {
     const decoded = await discordPayload(init);
@@ -256,6 +265,34 @@ try {
   assert.equal(expressionResponse.payload.emojis[0].animated, true);
   assert.equal(expressionResponse.payload.stickers[0].id, ids.sticker);
 
+  const savedEmoji = await call("POST", "/api/server/expression-library", {
+    guildId: ids.guild,
+    botId: ids.bot,
+    channelId: ids.channel,
+    messageId: ids.message,
+    expressionId: ids.emoji,
+    type: "emoji",
+  });
+  assert.equal(savedEmoji.status, 201);
+  assert.equal(savedEmoji.payload.expression.access, "available");
+  const savedSticker = await call("POST", "/api/server/expression-library", {
+    guildId: ids.guild,
+    botId: ids.bot,
+    channelId: ids.channel,
+    messageId: ids.message,
+    expressionId: ids.sticker,
+    type: "sticker",
+  });
+  assert.equal(savedSticker.status, 201);
+  const expressionLibrary = await call("GET", `/api/server/expression-library?guildId=${ids.guild}&botId=${ids.bot}`);
+  assert.equal(expressionLibrary.status, 200);
+  assert.equal(expressionLibrary.payload.expressions.length, 2);
+  const removedExpression = await call("DELETE", `/api/server/expression-library?guildId=${ids.guild}&botId=${ids.bot}`, {
+    type: "emoji",
+    expressionId: ids.emoji,
+  });
+  assert.equal(removedExpression.status, 200);
+
   const channelSend = await call("POST", "/api/server/messages", {
     guildId: ids.guild,
     botId: ids.bot,
@@ -372,7 +409,7 @@ try {
   assert.equal(processed.payload.campaign.status, "completed");
   assert.equal(processed.payload.campaign.sent, 1);
 
-  console.log("Valax multi-bot, media, expressions, mention, reply, DM, campaign, and notification workflows passed.");
+  console.log("Valax saved-expression, media, mention, reply, DM, campaign, and notification workflows passed.");
 } finally {
   globalThis.fetch = originalFetch;
   if (database && user) {
@@ -384,6 +421,7 @@ try {
       database.collection("messageLogs").deleteMany(filter),
       database.collection("notificationSettings").deleteMany(filter),
       database.collection("dmConversations").deleteMany(filter),
+      database.collection("savedExpressions").deleteMany(filter),
       database.collection("dmCampaigns").deleteMany(filter),
       database.collection("dmDeliveryLogs").deleteMany(filter),
     ]);

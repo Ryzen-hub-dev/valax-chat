@@ -20,6 +20,7 @@
     { "source": "/api/server/messages", "destination": "/api/index?__valaxPath=server/messages" },
     { "source": "/api/server/members", "destination": "/api/index?__valaxPath=server/members" },
     { "source": "/api/server/expressions", "destination": "/api/index?__valaxPath=server/expressions" },
+    { "source": "/api/server/expression-library", "destination": "/api/index?__valaxPath=server/expression-library" },
     { "source": "/api/server/dm", "destination": "/api/index?__valaxPath=server/dm" },
     { "source": "/api/server/dm-recent", "destination": "/api/index?__valaxPath=server/dm-recent" },
     { "source": "/api/server/dm-campaigns", "destination": "/api/index?__valaxPath=server/dm-campaigns" },
