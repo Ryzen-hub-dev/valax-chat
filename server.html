@@ -14,7 +14,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
-    <link rel="stylesheet" href="./server.css?v=20260724-mentions" />
+    <link rel="stylesheet" href="./server.css?v=20260724-media" />
   </head>
   <body class="workspace-page page-enter">
     <div class="page-curtain" data-page-curtain aria-hidden="true">
@@ -139,11 +139,18 @@
             <button type="button" data-cancel-reply aria-label="Cancel reply" title="Cancel reply"><i data-lucide="x" aria-hidden="true"></i></button>
           </div>
           <div class="composer-tools">
-            <div class="dynamic-tokens" aria-label="Dynamic values">
-              <button type="button" data-token="/date">/date</button>
-              <button type="button" data-token="/time">/time</button>
-              <button type="button" data-token="/server">/server</button>
-              <button type="button" data-open-members>/@</button>
+            <div class="composer-tool-groups">
+              <div class="dynamic-tokens" aria-label="Dynamic values">
+                <button type="button" data-token="/date">/date</button>
+                <button type="button" data-token="/time">/time</button>
+                <button type="button" data-token="/server">/server</button>
+                <button type="button" data-open-members>/@</button>
+              </div>
+              <div class="media-tools">
+                <button type="button" data-choose-message-file aria-label="Attach image or video" title="Attach image or video"><i data-lucide="paperclip" aria-hidden="true"></i></button>
+                <button type="button" data-open-expressions="message" aria-label="Choose emoji or sticker" title="Choose emoji or sticker"><i data-lucide="smile-plus" aria-hidden="true"></i></button>
+                <input type="file" data-message-file accept="image/png,image/jpeg,image/webp,image/avif,image/gif,video/mp4,video/webm,video/quicktime" hidden />
+              </div>
             </div>
             <label class="mention-policy">
               <i data-lucide="at-sign" aria-hidden="true"></i>
@@ -157,6 +164,8 @@
             </label>
           </div>
           <div class="mention-suggestions" data-mention-suggestions role="listbox" aria-label="Member suggestions" hidden></div>
+          <div class="selected-stickers" data-selected-stickers hidden></div>
+          <div class="attachment-preview" data-message-attachment-preview hidden></div>
           <div class="composer-input-row">
             <textarea
               data-message-input
@@ -200,17 +209,47 @@
         </div>
         <button class="icon-button" type="button" data-close-dm aria-label="Close direct message" title="Close direct message"><i data-lucide="x" aria-hidden="true"></i></button>
       </header>
+      <section class="recent-dm" data-recent-dm-section hidden>
+        <span>RECENT CONVERSATIONS</span>
+        <div data-recent-dm-list></div>
+      </section>
       <div class="dm-opt-out" data-dm-opt-out hidden><i data-lucide="shield-x" aria-hidden="true"></i><span>This member has opted out of bot notifications.</span></div>
       <div class="dm-message-list" data-dm-message-list></div>
       <form class="dm-composer" data-dm-form>
-        <div class="dynamic-tokens">
-          <button type="button" data-dm-token="/date">/date</button>
-          <button type="button" data-dm-token="/time">/time</button>
-          <button type="button" data-dm-token="/@">/@</button>
-          <button type="button" data-dm-token="/server">/server</button>
+        <div class="dm-tools">
+          <div class="dynamic-tokens">
+            <button type="button" data-dm-token="/date">/date</button>
+            <button type="button" data-dm-token="/time">/time</button>
+            <button type="button" data-dm-token="/@">/@</button>
+            <button type="button" data-dm-token="/server">/server</button>
+          </div>
+          <div class="media-tools">
+            <button type="button" data-choose-dm-file aria-label="Attach image or video" title="Attach image or video"><i data-lucide="paperclip" aria-hidden="true"></i></button>
+            <button type="button" data-open-expressions="dm" aria-label="Choose server emoji" title="Choose server emoji"><i data-lucide="smile-plus" aria-hidden="true"></i></button>
+            <input type="file" data-dm-file accept="image/png,image/jpeg,image/webp,image/avif,image/gif,video/mp4,video/webm,video/quicktime" hidden />
+          </div>
         </div>
+        <div class="attachment-preview" data-dm-attachment-preview hidden></div>
         <div><textarea data-dm-input rows="3" maxlength="2000" placeholder="Write a private message..." aria-label="Direct message content"></textarea><button class="composer-send" type="submit" data-send-dm aria-label="Send direct message" title="Send direct message"><i data-lucide="send" aria-hidden="true"></i></button></div>
       </form>
+    </dialog>
+
+    <dialog class="workspace-dialog expression-dialog" data-expression-dialog>
+      <header class="workspace-dialog-header">
+        <div><span>SERVER EXPRESSIONS</span><h2>Emoji &amp; stickers</h2></div>
+        <button class="icon-button" type="button" data-close-expressions aria-label="Close expressions" title="Close expressions"><i data-lucide="x" aria-hidden="true"></i></button>
+      </header>
+      <div class="expression-tabs" role="tablist" aria-label="Expression type">
+        <button class="is-active" type="button" role="tab" data-expression-tab="emoji">Emoji</button>
+        <button type="button" role="tab" data-expression-tab="sticker">Stickers</button>
+      </div>
+      <label class="dialog-search">
+        <i data-lucide="search" aria-hidden="true"></i>
+        <input type="search" data-expression-search placeholder="Search expressions" aria-label="Search expressions" />
+      </label>
+      <div class="expression-grid" data-expression-grid>
+        <div class="dialog-loading"><span class="workspace-spinner"></span><span>Loading expressions...</span></div>
+      </div>
     </dialog>
 
     <dialog class="workspace-dialog campaign-dialog" data-campaign-dialog>
@@ -252,6 +291,10 @@
         <div><span>SMART ALERTS</span><h2>Notifications</h2></div>
         <button class="icon-button" type="button" data-close-notifications aria-label="Close notification settings" title="Close notification settings"><i data-lucide="x" aria-hidden="true"></i></button>
       </header>
+      <div class="notification-permission">
+        <div><strong>Browser permission</strong><span data-notification-permission>Checking browser access...</span></div>
+        <button class="button button-ghost" type="button" data-request-notifications>Allow alerts</button>
+      </div>
       <form class="notification-settings" data-notification-form>
         <label><span><strong>Notifications</strong><small>Master control for this server.</small></span><input type="checkbox" data-setting="enabled" /></label>
         <label><span><strong>Browser alerts</strong><small>Show alerts when Valax is in the background.</small></span><input type="checkbox" data-setting="browser" /></label>
@@ -273,6 +316,6 @@
     <span data-year hidden></span>
     <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
     <script type="module" src="./app.js"></script>
-    <script type="module" src="./workspace.js?v=20260724-mentions"></script>
+    <script type="module" src="./workspace.js?v=20260724-media"></script>
   </body>
 </html>

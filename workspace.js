@@ -31,8 +31,16 @@ const dmMessageList = document.querySelector("[data-dm-message-list]");
 const dmInput = document.querySelector("[data-dm-input]");
 const campaignDialog = document.querySelector("[data-campaign-dialog]");
 const notificationDialog = document.querySelector("[data-notification-dialog]");
+const expressionDialog = document.querySelector("[data-expression-dialog]");
+const expressionGrid = document.querySelector("[data-expression-grid]");
+const expressionSearch = document.querySelector("[data-expression-search]");
 const workspaceBotSelector = document.querySelector("[data-workspace-bot-selector]");
 const mentionSuggestions = document.querySelector("[data-mention-suggestions]");
+const messageFileInput = document.querySelector("[data-message-file]");
+const dmFileInput = document.querySelector("[data-dm-file]");
+const messageAttachmentPreview = document.querySelector("[data-message-attachment-preview]");
+const dmAttachmentPreview = document.querySelector("[data-dm-attachment-preview]");
+const selectedStickersView = document.querySelector("[data-selected-stickers]");
 
 let workspace = null;
 let selectedChannel = null;
@@ -46,6 +54,7 @@ let memberAfter = null;
 let memberSearchTimer = null;
 let activeDmMember = null;
 let dmLoading = false;
+let dmRequestSequence = 0;
 let activeDmLastId = null;
 let activeCampaign = null;
 let campaignTimer = null;
@@ -68,6 +77,24 @@ let mentionAutocompleteController = null;
 let mentionAutocompleteTrigger = null;
 let mentionAutocompleteMembers = [];
 let mentionAutocompleteIndex = 0;
+let messageAttachment = null;
+let dmAttachment = null;
+let expressions = null;
+let expressionsLoading = false;
+let expressionTarget = "message";
+let expressionTab = "emoji";
+let selectedStickers = [];
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+const ALLOWED_UPLOAD_TYPES = new Set([
+  "image/avif",
+  "image/gif",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
+]);
 
 function apiQuery(values = {}) {
   return new URLSearchParams({ guildId, botId: workspace?.bot?.id || requestedBotId, ...values });
@@ -314,23 +341,55 @@ function selectChannel(channel) {
 }
 
 function resolveMessageContent(message) {
-  return message.mentions.reduce(
+  return (message.mentions || []).reduce(
     (content, mention) => content.replaceAll(`<@${mention.id}>`, `@${mention.displayName}`),
     message.content
   );
 }
 
-function createAttachment(attachment) {
-  let attachmentUrl;
+function safeMediaUrl(value) {
   try {
-    const parsed = new URL(attachment.url);
-    if (!["https:", "http:"].includes(parsed.protocol)) return document.createTextNode(attachment.filename);
-    attachmentUrl = parsed.toString();
+    const parsed = new URL(value);
+    return ["https:", "http:"].includes(parsed.protocol) ? parsed.toString() : null;
   } catch {
-    return document.createTextNode(attachment.filename);
+    return null;
   }
+}
 
-  if (attachment.contentType?.startsWith("image/")) {
+function appendDiscordContent(container, message) {
+  const source = message.content || "";
+  const mentions = new Map((message.mentions || []).map((mention) => [mention.id, mention.displayName]));
+  const pattern = /<(a?):([a-zA-Z0-9_]{1,32}):(\d{17,20})>|<@!?(\d{17,20})>/g;
+  let cursor = 0;
+  for (const match of source.matchAll(pattern)) {
+    if (match.index > cursor) container.append(document.createTextNode(source.slice(cursor, match.index)));
+    if (match[3]) {
+      const image = document.createElement("img");
+      image.className = "message-custom-emoji";
+      image.src = `https://cdn.discordapp.com/emojis/${match[3]}.${match[1] ? "gif" : "png"}?size=64&quality=lossless`;
+      image.alt = `:${match[2]}:`;
+      image.title = `:${match[2]}:`;
+      image.loading = "lazy";
+      container.append(image);
+    } else {
+      const mention = document.createElement("span");
+      mention.className = "message-mention";
+      mention.textContent = `@${mentions.get(match[4]) || "member"}`;
+      container.append(mention);
+    }
+    cursor = match.index + match[0].length;
+  }
+  if (cursor < source.length) container.append(document.createTextNode(source.slice(cursor)));
+}
+
+function createAttachment(attachment) {
+  const attachmentUrl = safeMediaUrl(attachment.url);
+  if (!attachmentUrl) return document.createTextNode(attachment.filename);
+  const type = attachment.contentType || "";
+  const imageLike = type.startsWith("image/") || /\.(?:avif|gif|jpe?g|png|webp)$/i.test(attachment.filename || "");
+  const videoLike = type.startsWith("video/") || /\.(?:mov|mp4|webm)$/i.test(attachment.filename || "");
+
+  if (imageLike) {
     const link = document.createElement("a");
     link.className = "message-attachment-image";
     link.href = attachmentUrl;
@@ -343,6 +402,15 @@ function createAttachment(attachment) {
     link.append(image);
     return link;
   }
+  if (videoLike) {
+    const video = document.createElement("video");
+    video.className = "message-attachment-video";
+    video.src = attachmentUrl;
+    video.controls = true;
+    video.preload = "metadata";
+    video.setAttribute("playsinline", "");
+    return video;
+  }
   const link = document.createElement("a");
   link.className = "message-attachment-file";
   link.href = attachmentUrl;
@@ -350,6 +418,18 @@ function createAttachment(attachment) {
   link.rel = "noreferrer";
   link.append(icon("paperclip"), attachment.filename);
   return link;
+}
+
+function createSticker(sticker) {
+  const url = safeMediaUrl(sticker.url);
+  if (!url) return document.createTextNode(sticker.name || "Discord sticker");
+  const image = document.createElement("img");
+  image.className = "message-sticker";
+  image.src = url;
+  image.alt = sticker.name || "Discord sticker";
+  image.title = sticker.name || "Discord sticker";
+  image.loading = "lazy";
+  return image;
 }
 
 function createEmbed(embed) {
@@ -377,6 +457,24 @@ function createEmbed(embed) {
     const description = document.createElement("p");
     description.textContent = embed.description;
     block.append(description);
+  }
+  const imageUrl = safeMediaUrl(embed.image || embed.thumbnail);
+  const videoUrl = safeMediaUrl(embed.video);
+  if (imageUrl) {
+    const image = document.createElement("img");
+    image.className = "message-embed-media";
+    image.src = imageUrl;
+    image.alt = embed.title || "Discord embed image";
+    image.loading = "lazy";
+    block.append(image);
+  } else if (videoUrl) {
+    const video = document.createElement("video");
+    video.className = "message-embed-media";
+    video.src = videoUrl;
+    video.controls = true;
+    video.preload = "metadata";
+    video.setAttribute("playsinline", "");
+    block.append(video);
   }
   return block;
 }
@@ -431,20 +529,25 @@ function createMessage(message, { allowReply = true } = {}) {
   meta.append(time);
   body.append(meta);
 
-  const resolvedContent = resolveMessageContent(message);
-  if (resolvedContent) {
+  if (message.content) {
     const content = document.createElement("p");
     content.className = "message-content";
-    content.textContent = resolvedContent;
+    appendDiscordContent(content, message);
     body.append(content);
   }
-  if (message.attachments.length) {
+  if ((message.attachments || []).length) {
     const attachments = document.createElement("div");
     attachments.className = "message-attachments";
     attachments.append(...message.attachments.map(createAttachment));
     body.append(attachments);
   }
-  message.embeds.forEach((embed) => body.append(createEmbed(embed)));
+  if ((message.stickers || []).length) {
+    const stickers = document.createElement("div");
+    stickers.className = "message-stickers";
+    stickers.append(...message.stickers.map(createSticker));
+    body.append(stickers);
+  }
+  (message.embeds || []).forEach((embed) => body.append(createEmbed(embed)));
   if (allowReply) {
     const actions = document.createElement("div");
     actions.className = "message-actions";
@@ -453,6 +556,19 @@ function createMessage(message, { allowReply = true } = {}) {
     reply.append(icon("reply"), "Reply");
     reply.addEventListener("click", () => setReplyTarget(message));
     actions.append(reply);
+    if (!message.author.bot && message.author.id !== workspace?.user?.id) {
+      const direct = document.createElement("button");
+      direct.type = "button";
+      direct.append(icon("message-circle"), "Message");
+      direct.addEventListener("click", () => openDirectConversation({
+        id: message.author.id,
+        username: message.author.username,
+        displayName: message.author.displayName,
+        avatarUrl: message.author.avatarUrl,
+        bot: false,
+      }));
+      actions.append(direct);
+    }
     body.append(actions);
   }
   row.append(avatar, body);
@@ -527,11 +643,24 @@ function notifyIncoming(message, kind) {
   playNotificationTone(kind);
   if (notificationSettings.browser && document.hidden && "Notification" in window && Notification.permission === "granted") {
     const labels = { normal: "New server message", mention: "Bot mentioned", reply: "New reply", dm: "New direct message" };
-    new Notification(`${labels[kind]} - ${workspace.server.name}`, {
+    const alert = new Notification(`${labels[kind]} - ${workspace.server.name}`, {
       body: `${message.author.displayName}: ${resolveMessageContent(message).slice(0, 140) || "New activity"}`,
       icon: "/assets/valax-logo.webp",
       tag: `valax-${guildId}-${kind}`,
     });
+    alert.onclick = () => {
+      window.focus();
+      alert.close();
+      if (!message.author.bot && message.author.id !== workspace.user.id) {
+        openDirectConversation({
+          id: message.author.id,
+          username: message.author.username,
+          displayName: message.author.displayName,
+          avatarUrl: message.author.avatarUrl,
+          bot: false,
+        });
+      }
+    };
   }
 }
 
@@ -737,9 +866,206 @@ function queueMentionAutocomplete() {
   }, 180);
 }
 
+function attachmentPreview(target) {
+  return target === "dm" ? dmAttachmentPreview : messageAttachmentPreview;
+}
+
+function currentAttachment(target) {
+  return target === "dm" ? dmAttachment : messageAttachment;
+}
+
+function clearAttachment(target) {
+  const selected = currentAttachment(target);
+  if (selected?.previewUrl) URL.revokeObjectURL(selected.previewUrl);
+  if (target === "dm") {
+    dmAttachment = null;
+    if (dmFileInput) dmFileInput.value = "";
+    updateDmComposer();
+  } else {
+    messageAttachment = null;
+    if (messageFileInput) messageFileInput.value = "";
+    updateComposer();
+  }
+  const preview = attachmentPreview(target);
+  preview.hidden = true;
+  preview.replaceChildren();
+}
+
+function renderAttachmentPreview(target) {
+  const selected = currentAttachment(target);
+  const preview = attachmentPreview(target);
+  if (!selected) {
+    preview.hidden = true;
+    preview.replaceChildren();
+    return;
+  }
+
+  const media = selected.file.type.startsWith("video/") ? document.createElement("video") : document.createElement("img");
+  media.src = selected.previewUrl;
+  if (media instanceof HTMLVideoElement) {
+    media.muted = true;
+    media.preload = "metadata";
+  } else {
+    media.alt = "";
+  }
+  const identity = document.createElement("div");
+  const filename = document.createElement("strong");
+  filename.textContent = selected.file.name;
+  const size = document.createElement("span");
+  size.textContent = `${(selected.file.size / 1024 / 1024).toFixed(2)} MB`;
+  identity.append(filename, size);
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.title = "Remove attachment";
+  remove.setAttribute("aria-label", "Remove attachment");
+  remove.append(icon("x"));
+  remove.addEventListener("click", () => clearAttachment(target));
+  preview.replaceChildren(media, identity, remove);
+  preview.hidden = false;
+  refreshIcons();
+}
+
+function selectAttachment(target, file) {
+  if (!file) return;
+  if (!ALLOWED_UPLOAD_TYPES.has(file.type)) {
+    showToast("Choose a PNG, JPEG, WebP, AVIF, GIF, MP4, WebM, or MOV file.", true);
+    return;
+  }
+  if (file.size > MAX_UPLOAD_BYTES) {
+    showToast("Attachments must be 4 MB or smaller.", true);
+    return;
+  }
+  clearAttachment(target);
+  const selected = { file, previewUrl: URL.createObjectURL(file) };
+  if (target === "dm") dmAttachment = selected;
+  else messageAttachment = selected;
+  renderAttachmentPreview(target);
+  if (target === "dm") updateDmComposer();
+  else updateComposer();
+}
+
+function renderSelectedStickers() {
+  selectedStickersView.replaceChildren(...selectedStickers.map((sticker) => {
+    const item = document.createElement("div");
+    const image = document.createElement("img");
+    image.src = sticker.url;
+    image.alt = sticker.name;
+    const name = document.createElement("span");
+    name.textContent = sticker.name;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.title = `Remove ${sticker.name}`;
+    remove.setAttribute("aria-label", `Remove ${sticker.name}`);
+    remove.append(icon("x"));
+    remove.addEventListener("click", () => {
+      selectedStickers = selectedStickers.filter((item) => item.id !== sticker.id);
+      renderSelectedStickers();
+      updateComposer();
+    });
+    item.append(image, name, remove);
+    return item;
+  }));
+  selectedStickersView.hidden = selectedStickers.length === 0;
+  refreshIcons();
+}
+
+async function loadExpressions() {
+  if (expressions || expressionsLoading) return;
+  expressionsLoading = true;
+  try {
+    const response = await fetch(`/api/server/expressions?${apiQuery()}`, {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+    });
+    const payload = await readPayload(response);
+    if (routeForApiError(response, payload)) return;
+    if (!response.ok) throw new Error(payload.error || "Server expressions could not be loaded.");
+    expressions = payload;
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "Server expressions could not be loaded.", true);
+    expressions = { emojis: [], stickers: [], permissions: {} };
+  } finally {
+    expressionsLoading = false;
+    renderExpressions();
+  }
+}
+
+function chooseExpression(expression) {
+  if (expressionTab === "emoji") {
+    const markup = `<${expression.animated ? "a" : ""}:${expression.name}:${expression.id}>`;
+    if (expressionTarget === "dm") insertInto(dmInput, markup);
+    else insertComposerText(markup);
+    closeDialog(expressionDialog);
+    return;
+  }
+  if (selectedStickers.some((sticker) => sticker.id === expression.id)) {
+    selectedStickers = selectedStickers.filter((sticker) => sticker.id !== expression.id);
+  } else if (selectedStickers.length < 3) {
+    selectedStickers = [...selectedStickers, expression];
+  } else {
+    showToast("Discord allows up to three stickers in one message.", true);
+    return;
+  }
+  renderSelectedStickers();
+  updateComposer();
+  closeDialog(expressionDialog);
+}
+
+function renderExpressions() {
+  if (!expressionGrid) return;
+  if (!expressions) {
+    expressionGrid.innerHTML = '<div class="dialog-loading"><span class="workspace-spinner"></span><span>Loading expressions...</span></div>';
+    return;
+  }
+  const query = expressionSearch.value.trim().toLowerCase();
+  const source = expressionTab === "sticker" ? expressions.stickers : expressions.emojis;
+  const items = source.filter((item) => item.name.toLowerCase().includes(query));
+  if (!items.length) {
+    const empty = document.createElement("div");
+    empty.className = "dialog-loading";
+    empty.textContent = expressionTab === "sticker" && expressions.permissions?.stickers === false
+      ? "Discord denied access to server stickers. Verify the bot role permissions."
+      : `No ${expressionTab === "sticker" ? "stickers" : "emoji"} found.`;
+    expressionGrid.replaceChildren(empty);
+    return;
+  }
+  expressionGrid.replaceChildren(...items.map((item) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.title = item.name;
+    button.setAttribute("aria-label", item.name);
+    const image = document.createElement("img");
+    image.src = item.url;
+    image.alt = "";
+    image.loading = "lazy";
+    const name = document.createElement("span");
+    name.textContent = item.name;
+    button.append(image, name);
+    button.addEventListener("click", () => chooseExpression(item));
+    return button;
+  }));
+}
+
+function openExpressionPicker(target) {
+  expressionTarget = target;
+  expressionTab = "emoji";
+  expressionDialog.classList.toggle("emoji-only", target === "dm");
+  expressionSearch.value = "";
+  document.querySelectorAll("[data-expression-tab]").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.expressionTab === "emoji");
+    button.hidden = target === "dm" && button.dataset.expressionTab === "sticker";
+  });
+  if (!expressionDialog.open) expressionDialog.showModal();
+  renderExpressions();
+  loadExpressions();
+}
+
 function updateComposer() {
   characterCount.textContent = `${messageInput.value.length.toLocaleString()} / 2,000`;
-  if (!sendInProgress) sendButton.disabled = !selectedChannel || messageInput.value.trim().length === 0;
+  if (!sendInProgress) {
+    sendButton.disabled = !selectedChannel
+      || (!messageInput.value.trim() && !messageAttachment && selectedStickers.length === 0);
+  }
 }
 
 function setSendBusy(isBusy) {
@@ -753,7 +1079,7 @@ function setSendBusy(isBusy) {
 
 async function sendMessage() {
   const content = messageInput.value.trim();
-  if (!selectedChannel || !content || sendInProgress) return;
+  if (!selectedChannel || (!content && !messageAttachment && selectedStickers.length === 0) || sendInProgress) return;
   const mentionPolicy = document.querySelector("[data-mention-policy]").value;
   const rawMention = content.match(/(?:^|\s)\/?@([^\s@<>]+)/);
   if (rawMention && !["everyone", "here"].includes(rawMention[1].toLowerCase())) {
@@ -773,28 +1099,44 @@ async function sendMessage() {
   setSendBusy(true);
 
   try {
+    const requestPayload = {
+      guildId,
+      botId: workspace.bot.id,
+      channelId: selectedChannel.id,
+      content,
+      mode: messageMode,
+      mentionPolicy,
+      mentionIds: [...selectedMentionIds],
+      stickerIds: selectedStickers.map((sticker) => sticker.id),
+      replyToId: replyTarget?.id || null,
+      notifyReplyAuthor: document.querySelector("[data-notify-reply]").checked,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    };
+    const requestOptions = messageAttachment
+      ? (() => {
+          const form = new FormData();
+          form.append("payload", JSON.stringify(requestPayload));
+          form.append("file", messageAttachment.file, messageAttachment.file.name);
+          return { body: form };
+        })()
+      : {
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestPayload),
+        };
     const response = await fetch("/api/server/messages", {
       method: "POST",
       credentials: "same-origin",
-      headers: { Accept: "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify({
-        guildId,
-        botId: workspace.bot.id,
-        channelId: selectedChannel.id,
-        content,
-        mode: messageMode,
-        mentionPolicy,
-        mentionIds: [...selectedMentionIds],
-        replyToId: replyTarget?.id || null,
-        notifyReplyAuthor: document.querySelector("[data-notify-reply]").checked,
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      }),
+      headers: { Accept: "application/json", ...(requestOptions.headers || {}) },
+      body: requestOptions.body,
     });
     const payload = await readPayload(response);
     if (routeForApiError(response, payload)) return;
     if (!response.ok) throw new Error(payload.error || "Discord could not send this message.");
 
     messageInput.value = "";
+    clearAttachment("message");
+    selectedStickers = [];
+    renderSelectedStickers();
     selectedMentionIds.clear();
     setReplyTarget(null);
     updateComposer();
@@ -920,38 +1262,101 @@ function openMemberDirectory() {
   loadMembers();
 }
 
-async function loadDirectConversation({ quiet = false } = {}) {
-  if (!activeDmMember || dmLoading) return;
-  dmLoading = true;
+function createRecentConversation(conversation) {
+  const member = {
+    id: conversation.recipientId,
+    username: conversation.username,
+    displayName: conversation.displayName,
+    avatarUrl: conversation.avatarUrl,
+    bot: false,
+  };
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = activeDmMember?.id === member.id ? "is-active" : "";
+  button.title = `Message ${member.displayName}`;
+  button.setAttribute("aria-label", `Message ${member.displayName}`);
+  button.append(memberAvatar(member));
+  const name = document.createElement("span");
+  name.textContent = member.displayName;
+  button.append(name);
+  button.addEventListener("click", () => openDirectConversation(member));
+  return button;
+}
+
+async function loadRecentDirectConversations() {
+  if (!workspace) return;
   try {
-    const response = await fetch(`/api/server/dm?${apiQuery({ recipientId: activeDmMember.id })}`, {
+    const response = await fetch(`/api/server/dm-recent?${apiQuery()}`, {
       credentials: "same-origin",
       headers: { Accept: "application/json" },
     });
     const payload = await readPayload(response);
+    if (!response.ok) return;
+    const conversations = payload.conversations || [];
+    const section = document.querySelector("[data-recent-dm-section]");
+    section.hidden = conversations.length === 0;
+    document.querySelector("[data-recent-dm-list]").replaceChildren(...conversations.map(createRecentConversation));
+  } catch {
+    // Recent conversations are an optional shortcut; the member directory remains available.
+  }
+}
+
+async function loadDirectConversation({ quiet = false } = {}) {
+  if (!activeDmMember || (quiet && dmLoading)) return;
+  const recipientId = activeDmMember.id;
+  const requestSequence = ++dmRequestSequence;
+  dmLoading = true;
+  try {
+    const response = await fetch(`/api/server/dm?${apiQuery({
+      recipientId: activeDmMember.id,
+      ...(quiet && activeDmLastId ? { after: activeDmLastId } : {}),
+    })}`, {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+    });
+    const payload = await readPayload(response);
+    if (requestSequence !== dmRequestSequence || activeDmMember?.id !== recipientId) return;
     if (routeForApiError(response, payload)) return;
     if (!response.ok) throw new Error(payload.error || "This direct conversation could not be loaded.");
     const newest = payload.messages[payload.messages.length - 1];
-    if (quiet && newest?.id === activeDmLastId) return;
-    if (quiet && newest && activeDmLastId && newest.author.id !== workspace.bot.id) notifyIncoming(newest, "dm");
+    if (quiet && !newest) return;
+    if (quiet && newest && newest.author.id !== workspace.bot.id) notifyIncoming(newest, "dm");
     activeDmLastId = newest?.id || null;
-    dmMessageList.replaceChildren(...payload.messages.map((message) => createMessage(message, { allowReply: false })));
+    if (quiet) {
+      payload.messages.forEach((message) => {
+        if (!dmMessageList.querySelector(`[data-message-id="${message.id}"]`)) {
+          dmMessageList.append(createMessage(message, { allowReply: false }));
+        }
+      });
+    } else {
+      dmMessageList.replaceChildren(...payload.messages.map((message) => createMessage(message, { allowReply: false })));
+    }
     const optOut = document.querySelector("[data-dm-opt-out]");
-    optOut.hidden = !payload.optedOut;
-    dmInput.disabled = payload.optedOut;
-    document.querySelector("[data-send-dm]").disabled = payload.optedOut;
+    if (payload.optedOut !== null) {
+      optOut.hidden = !payload.optedOut;
+      dmInput.disabled = payload.optedOut;
+    }
+    updateDmComposer();
     dmMessageList.scrollTop = dmMessageList.scrollHeight;
+    if (!quiet) loadRecentDirectConversations();
     refreshIcons();
   } catch (error) {
     if (!quiet) showToast(error instanceof Error ? error.message : "This direct conversation could not be loaded.", true);
   } finally {
-    dmLoading = false;
+    if (requestSequence === dmRequestSequence) dmLoading = false;
   }
 }
 
 function openDirectConversation(member) {
+  const recipientChanged = activeDmMember?.id !== member.id;
+  if (recipientChanged) {
+    dmInput.value = "";
+    clearAttachment("dm");
+  }
   activeDmMember = member;
   activeDmLastId = null;
+  dmInput.disabled = false;
+  document.querySelector("[data-dm-opt-out]").hidden = true;
   closeDialog(memberDialog);
   document.querySelector("[data-dm-member-name]").textContent = member.displayName;
   const avatar = document.querySelector("[data-dm-member-avatar]");
@@ -959,35 +1364,57 @@ function openDirectConversation(member) {
   replaceAvatar(avatar, member.avatarUrl, `${member.displayName} avatar`, "user");
   dmMessageList.innerHTML = '<div class="dialog-loading"><span class="workspace-spinner"></span><span>Loading conversation...</span></div>';
   if (!dmDialog.open) dmDialog.showModal();
+  updateDmComposer();
+  loadRecentDirectConversations();
   loadDirectConversation();
+}
+
+function updateDmComposer() {
+  const button = document.querySelector("[data-send-dm]");
+  if (!button || button.classList.contains("is-loading")) return;
+  button.disabled = !activeDmMember || dmInput.disabled || (!dmInput.value.trim() && !dmAttachment);
 }
 
 async function sendDirectMessage() {
   const content = dmInput.value.trim();
-  if (!activeDmMember || !content) return;
+  if (!activeDmMember || (!content && !dmAttachment)) return;
   const button = document.querySelector("[data-send-dm]");
   button.disabled = true;
   button.classList.add("is-loading");
   button.replaceChildren(icon("loader-circle"));
   refreshIcons();
   try {
+    const requestPayload = {
+      guildId,
+      botId: workspace.bot.id,
+      recipientId: activeDmMember.id,
+      content,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    };
+    const requestOptions = dmAttachment
+      ? (() => {
+          const form = new FormData();
+          form.append("payload", JSON.stringify(requestPayload));
+          form.append("file", dmAttachment.file, dmAttachment.file.name);
+          return { body: form };
+        })()
+      : {
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestPayload),
+        };
     const response = await fetch("/api/server/dm", {
       method: "POST",
       credentials: "same-origin",
-      headers: { Accept: "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify({
-        guildId,
-        botId: workspace.bot.id,
-        recipientId: activeDmMember.id,
-        content,
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      }),
+      headers: { Accept: "application/json", ...(requestOptions.headers || {}) },
+      body: requestOptions.body,
     });
     const payload = await readPayload(response);
     if (routeForApiError(response, payload)) return;
     if (!response.ok) throw new Error(payload.error || "Discord could not deliver this direct message.");
     dmInput.value = "";
+    clearAttachment("dm");
     await loadDirectConversation();
+    loadRecentDirectConversations();
     showToast("Direct message delivered.");
   } catch (error) {
     showToast(error instanceof Error ? error.message : "Discord could not deliver this direct message.", true);
@@ -995,6 +1422,7 @@ async function sendDirectMessage() {
     button.disabled = false;
     button.classList.remove("is-loading");
     button.replaceChildren(icon("send"));
+    updateDmComposer();
     refreshIcons();
   }
 }
@@ -1167,6 +1595,40 @@ async function cancelCampaign() {
   }
 }
 
+function updateNotificationPermission() {
+  const label = document.querySelector("[data-notification-permission]");
+  const button = document.querySelector("[data-request-notifications]");
+  if (!label || !button) return;
+  if (!("Notification" in window)) {
+    label.textContent = "This browser does not support desktop alerts.";
+    button.disabled = true;
+    button.hidden = true;
+    return;
+  }
+  const states = {
+    granted: "Allowed for this browser while Valax is open.",
+    denied: "Blocked in browser settings. Change the site permission to enable alerts.",
+    default: "Permission has not been requested yet.",
+  };
+  label.textContent = states[Notification.permission] || states.default;
+  button.hidden = Notification.permission === "granted";
+  button.disabled = Notification.permission === "denied";
+}
+
+async function requestNotificationPermission() {
+  if (!("Notification" in window) || Notification.permission === "denied") return;
+  try {
+    const permission = await Notification.requestPermission();
+    updateNotificationPermission();
+    if (permission === "granted") {
+      playNotificationTone("mention");
+      showToast("Browser alerts are now allowed.");
+    }
+  } catch {
+    showToast("The browser could not update notification permission.", true);
+  }
+}
+
 function fillNotificationForm() {
   document.querySelectorAll("[data-setting]").forEach((input) => {
     input.checked = notificationSettings[input.dataset.setting] === true;
@@ -1202,9 +1664,6 @@ async function saveNotificationSettings() {
     start: document.querySelector("[data-quiet-start]").value || "22:00",
     end: document.querySelector("[data-quiet-end]").value || "08:00",
   };
-  if (settings.browser && "Notification" in window && Notification.permission === "default") {
-    await Notification.requestPermission();
-  }
   try {
     const response = await fetch(`/api/server/notifications?${apiQuery()}`, {
       method: "PUT",
@@ -1249,6 +1708,8 @@ document.querySelector("[data-close-dm]")?.addEventListener("click", () => {
   closeDialog(dmDialog);
   activeDmMember = null;
   activeDmLastId = null;
+  dmInput.value = "";
+  clearAttachment("dm");
 });
 document.querySelector("[data-dm-form]")?.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -1256,6 +1717,50 @@ document.querySelector("[data-dm-form]")?.addEventListener("submit", (event) => 
 });
 document.querySelectorAll("[data-dm-token]").forEach((button) => {
   button.addEventListener("click", () => insertInto(dmInput, button.dataset.dmToken));
+});
+dmInput?.addEventListener("input", updateDmComposer);
+
+document.querySelector("[data-choose-message-file]")?.addEventListener("click", () => messageFileInput.click());
+document.querySelector("[data-choose-dm-file]")?.addEventListener("click", () => dmFileInput.click());
+messageFileInput?.addEventListener("change", () => selectAttachment("message", messageFileInput.files?.[0]));
+dmFileInput?.addEventListener("change", () => selectAttachment("dm", dmFileInput.files?.[0]));
+document.querySelectorAll("[data-open-expressions]").forEach((button) => {
+  button.addEventListener("click", () => openExpressionPicker(button.dataset.openExpressions));
+});
+document.querySelector("[data-close-expressions]")?.addEventListener("click", () => closeDialog(expressionDialog));
+document.querySelectorAll("[data-expression-tab]").forEach((button) => {
+  button.addEventListener("click", () => {
+    expressionTab = button.dataset.expressionTab;
+    document.querySelectorAll("[data-expression-tab]").forEach((item) => item.classList.toggle("is-active", item === button));
+    renderExpressions();
+  });
+});
+expressionSearch?.addEventListener("input", renderExpressions);
+
+[[messageForm, "message"], [document.querySelector("[data-dm-form]"), "dm"]].forEach(([form, target]) => {
+  form?.addEventListener("dragover", (event) => {
+    if (![...event.dataTransfer.items].some((item) => item.kind === "file")) return;
+    event.preventDefault();
+    form.classList.add("is-dragging-file");
+  });
+  form?.addEventListener("dragleave", (event) => {
+    if (!form.contains(event.relatedTarget)) form.classList.remove("is-dragging-file");
+  });
+  form?.addEventListener("drop", (event) => {
+    form.classList.remove("is-dragging-file");
+    const file = [...event.dataTransfer.files][0];
+    if (!file) return;
+    event.preventDefault();
+    selectAttachment(target, file);
+  });
+});
+[[messageInput, "message"], [dmInput, "dm"]].forEach(([input, target]) => {
+  input?.addEventListener("paste", (event) => {
+    const file = [...event.clipboardData.items]
+      .find((item) => item.kind === "file" && ALLOWED_UPLOAD_TYPES.has(item.type))
+      ?.getAsFile();
+    if (file) selectAttachment(target, file);
+  });
 });
 
 document.querySelector("[data-open-campaign]")?.addEventListener("click", openCampaignDialog);
@@ -1275,15 +1780,17 @@ document.querySelectorAll("[data-campaign-token]").forEach((button) => {
 
 document.querySelector("[data-open-notifications]")?.addEventListener("click", () => {
   fillNotificationForm();
+  updateNotificationPermission();
   if (!notificationDialog.open) notificationDialog.showModal();
 });
+document.querySelector("[data-request-notifications]")?.addEventListener("click", requestNotificationPermission);
 document.querySelector("[data-close-notifications]")?.addEventListener("click", () => closeDialog(notificationDialog));
 document.querySelector("[data-notification-form]")?.addEventListener("submit", (event) => {
   event.preventDefault();
   saveNotificationSettings();
 });
 
-[memberDialog, dmDialog, campaignDialog, notificationDialog].forEach((dialog) => {
+[memberDialog, dmDialog, expressionDialog, campaignDialog, notificationDialog].forEach((dialog) => {
   dialog?.addEventListener("click", (event) => {
     if (event.target === dialog) closeDialog(dialog);
   });
@@ -1368,6 +1875,13 @@ window.setInterval(() => {
   if (activeDmMember && dmDialog.open) loadDirectConversation({ quiet: true });
 }, 3_000);
 
+window.addEventListener("beforeunload", () => {
+  if (messageAttachment?.previewUrl) URL.revokeObjectURL(messageAttachment.previewUrl);
+  if (dmAttachment?.previewUrl) URL.revokeObjectURL(dmAttachment.previewUrl);
+});
+
 loadWorkspace();
 updateComposer();
+updateDmComposer();
+updateNotificationPermission();
 refreshIcons();

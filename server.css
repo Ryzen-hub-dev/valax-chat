@@ -688,6 +688,21 @@
   white-space: pre-wrap;
 }
 
+.message-custom-emoji {
+  width: 24px;
+  height: 24px;
+  margin: 0 2px;
+  vertical-align: -7px;
+  object-fit: contain;
+}
+
+.message-mention {
+  padding: 1px 3px;
+  border-radius: 2px;
+  background: rgba(141, 118, 255, 0.18);
+  color: #b9adff;
+}
+
 .message-attachments {
   display: grid;
   max-width: 520px;
@@ -706,6 +721,27 @@
   max-height: 360px;
   border: 1px solid #363634;
   border-radius: 4px;
+  object-fit: contain;
+}
+
+.message-attachment-video {
+  width: min(520px, 100%);
+  max-height: 360px;
+  border: 1px solid #363634;
+  border-radius: 4px;
+  background: #080808;
+}
+
+.message-stickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.message-sticker {
+  width: 150px;
+  height: 150px;
   object-fit: contain;
 }
 
@@ -743,6 +779,14 @@
   white-space: pre-wrap;
 }
 
+.message-embed-media {
+  display: block;
+  width: min(460px, 100%);
+  max-height: 320px;
+  margin-top: 9px;
+  object-fit: contain;
+}
+
 .message-composer {
   position: relative;
   flex: 0 0 auto;
@@ -778,6 +822,46 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.composer-tool-groups,
+.dm-tools {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.composer-tool-groups {
+  flex: 1;
+}
+
+.media-tools {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+}
+
+.media-tools > button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid #353533;
+  border-radius: 3px;
+  background: transparent;
+  color: #85857f;
+  cursor: pointer;
+}
+
+.media-tools > button:hover {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+.media-tools svg {
+  width: 13px;
 }
 
 .dynamic-tokens {
@@ -925,6 +1009,118 @@
 
 .composer-input-row:focus-within {
   border-color: #666660;
+}
+
+.message-composer.is-dragging-file .composer-input-row,
+.dm-composer.is-dragging-file > div:last-child {
+  border-color: var(--yellow);
+  background: #1a1910;
+}
+
+.attachment-preview {
+  display: grid;
+  min-height: 58px;
+  grid-template-columns: 44px minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+  padding: 6px 8px;
+  border: 1px solid #353533;
+  border-radius: 4px;
+  background: #131313;
+}
+
+.attachment-preview[hidden],
+.selected-stickers[hidden],
+.recent-dm[hidden] {
+  display: none;
+}
+
+.attachment-preview > img,
+.attachment-preview > video {
+  width: 44px;
+  height: 44px;
+  border-radius: 3px;
+  background: #090909;
+  object-fit: cover;
+}
+
+.attachment-preview > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.attachment-preview strong,
+.attachment-preview span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-preview strong {
+  font-size: 9px;
+}
+
+.attachment-preview span {
+  color: #70706a;
+  font-family: "DM Mono", monospace;
+  font-size: 7px;
+}
+
+.attachment-preview > button,
+.selected-stickers button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #777771;
+  cursor: pointer;
+}
+
+.attachment-preview button:hover,
+.selected-stickers button:hover {
+  color: #ef7770;
+}
+
+.attachment-preview button svg,
+.selected-stickers button svg {
+  width: 13px;
+}
+
+.selected-stickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+}
+
+.selected-stickers > div {
+  display: grid;
+  min-height: 44px;
+  grid-template-columns: 34px minmax(0, 110px) 28px;
+  align-items: center;
+  gap: 7px;
+  padding: 4px;
+  border: 1px solid #353533;
+  border-radius: 4px;
+  background: #131313;
+  font-size: 8px;
+}
+
+.selected-stickers img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.selected-stickers span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .composer-input-row textarea {
@@ -1365,9 +1561,69 @@
   grid-template-columns: 34px minmax(0, 1fr);
 }
 
+.recent-dm {
+  padding: 10px 18px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.recent-dm > span {
+  display: block;
+  margin-bottom: 8px;
+  color: #686862;
+  font-family: "DM Mono", monospace;
+  font-size: 7px;
+}
+
+.recent-dm > div {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.recent-dm button {
+  display: grid;
+  width: 58px;
+  min-width: 58px;
+  grid-template-rows: 34px 20px;
+  justify-items: center;
+  gap: 3px;
+  padding: 4px 2px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: #85857f;
+  cursor: pointer;
+}
+
+.recent-dm button:hover,
+.recent-dm button.is-active {
+  border-color: #444440;
+  background: #181817;
+  color: var(--paper);
+}
+
+.recent-dm .member-avatar {
+  width: 32px;
+  height: 32px;
+}
+
+.recent-dm button > span:last-child {
+  width: 100%;
+  overflow: hidden;
+  font-size: 7px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .dm-composer {
   padding: 10px 18px 16px;
   border-top: 1px solid var(--line);
+}
+
+.dm-tools {
+  min-height: 34px;
 }
 
 .dm-composer > div:last-child {
@@ -1386,6 +1642,89 @@
   outline: 0;
   background: transparent;
   color: var(--paper);
+}
+
+.expression-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  border-bottom: 1px solid var(--line);
+}
+
+.expression-dialog.emoji-only .expression-tabs {
+  grid-template-columns: 1fr;
+}
+
+.expression-tabs button {
+  min-height: 42px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  color: #777771;
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.expression-tabs button:last-child {
+  border-right: 0;
+}
+
+.expression-tabs button.is-active {
+  box-shadow: inset 0 -2px var(--yellow);
+  color: var(--paper);
+}
+
+.expression-tabs button[hidden] {
+  display: none;
+}
+
+.expression-grid {
+  display: grid;
+  min-height: 240px;
+  max-height: min(440px, calc(100svh - 230px));
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  align-content: start;
+  gap: 1px;
+  overflow-y: auto;
+  background: var(--line);
+}
+
+.expression-grid > button {
+  display: grid;
+  min-width: 0;
+  min-height: 92px;
+  grid-template-rows: 56px 16px;
+  place-items: center;
+  gap: 5px;
+  padding: 8px 5px;
+  border: 0;
+  background: #131313;
+  color: #85857f;
+  cursor: pointer;
+}
+
+.expression-grid > button:hover {
+  background: #1c1c19;
+  color: var(--paper);
+}
+
+.expression-grid img {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+}
+
+.expression-grid button span {
+  width: 100%;
+  overflow: hidden;
+  font-size: 7px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.expression-grid .dialog-loading {
+  grid-column: 1 / -1;
+  background: #111;
 }
 
 .campaign-safeguards {
@@ -1489,6 +1828,40 @@
 
 .notification-settings {
   gap: 0;
+}
+
+.notification-permission {
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 22px;
+  border-bottom: 1px solid var(--line);
+  background: #151514;
+}
+
+.notification-permission > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.notification-permission strong {
+  font-size: 9px;
+}
+
+.notification-permission span {
+  color: #74746e;
+  font-family: "DM Mono", monospace;
+  font-size: 7px;
+  line-height: 1.45;
+}
+
+.notification-permission .button {
+  min-width: 104px;
+  flex: 0 0 auto;
 }
 
 .notification-settings > label {
@@ -1675,6 +2048,10 @@
     padding-bottom: 5px;
   }
 
+  .composer-tool-groups {
+    width: 100%;
+  }
+
   .mention-policy {
     align-self: flex-end;
     margin-top: -32px;
@@ -1723,6 +2100,11 @@
     max-height: calc(100svh - 220px);
   }
 
+  .recent-dm {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
   .member-row {
     grid-template-columns: 34px minmax(0, 1fr) 30px 30px;
     gap: 6px;
@@ -1743,5 +2125,15 @@
 
   .quiet-hours {
     grid-template-columns: 1fr 82px auto 82px;
+  }
+
+  .notification-permission {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 12px 14px;
+  }
+
+  .notification-permission .button {
+    width: 100%;
   }
 }

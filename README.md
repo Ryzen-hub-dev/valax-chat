@@ -22,17 +22,25 @@ can run an explicit connection test for each server; Valax sends one notificatio
 message, removes it immediately, and stores only the server, channel, result, and timestamp.
 
 After a server passes its connection test, `/server` provides the channel workspace. It loads recent
-Discord messages, displays image and file attachments, and sends standard messages or announcements
-through the connected Bot. Announcement channels support Discord crossposting. Dynamic `/date`,
+Discord messages, renders custom and animated Discord emoji, stickers, images, GIFs, videos, and file
+attachments, and sends standard messages or announcements through the connected Bot. Channel and
+one-to-one DM composers accept one PNG, JPEG, WebP, AVIF, GIF, MP4, WebM, or MOV attachment up to
+4 MB. Files are forwarded directly to Discord and are not stored by Valax or MongoDB. Channel
+messages can also send up to three Discord server stickers. Announcement channels support Discord
+crossposting. Dynamic `/date`,
 `/time`, and `/server` values are resolved on the server, and mention parsing is disabled by default.
 Message audit records contain delivery metadata only and expire after 90 days; message content is not
 stored in MongoDB.
 
 The server workspace also includes a searchable member directory, explicit user mentions, Discord
-message replies, and one-to-one Bot DMs. Channel messages use incremental synchronization and a
-five-minute channel validation cache to reduce Discord API traffic. Notification preferences are
-stored per account, Bot, and server; normal messages, mentions, replies, and DMs use separate browser
-tones with quiet hours and an anti-noise grouping window.
+message replies, one-to-one Bot DMs, one-click private messages from a channel author, and a recent
+conversation shortcut list. Recent conversation records contain only participant identity and activity
+timestamps. Channel messages and active DMs use incremental synchronization and a five-minute channel
+validation cache to reduce Discord API traffic. Notification preferences are stored per account, Bot,
+and server; normal messages, mentions, replies, and DMs use separate browser tones with quiet hours
+and an anti-noise grouping window. Desktop alerts require an explicit browser permission and work while
+Valax remains open or backgrounded; closed-browser push delivery requires a separate persistent push
+service and is intentionally not claimed by this project.
 
 Member-wide DM notifications run as resumable campaigns. A campaign requires an exact server-name
 confirmation, processes one recipient per serverless request, honors Discord `retry_after`, detects
@@ -79,5 +87,6 @@ npm test
 ```
 
 The workflow test uses a temporary MongoDB user record and mocked Discord responses to verify Bot
-selection, member mentions, replies, direct messages, campaigns, and notification settings. Temporary
-records are removed in a `finally` block even when an assertion fails.
+selection, member mentions, replies, server emoji and sticker discovery, multipart image delivery,
+direct messages, recent conversations, campaigns, and notification settings. Temporary records are
+removed in a `finally` block even when an assertion fails.

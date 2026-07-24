@@ -19,7 +19,9 @@
     { "source": "/api/server", "destination": "/api/index?__valaxPath=server" },
     { "source": "/api/server/messages", "destination": "/api/index?__valaxPath=server/messages" },
     { "source": "/api/server/members", "destination": "/api/index?__valaxPath=server/members" },
+    { "source": "/api/server/expressions", "destination": "/api/index?__valaxPath=server/expressions" },
     { "source": "/api/server/dm", "destination": "/api/index?__valaxPath=server/dm" },
+    { "source": "/api/server/dm-recent", "destination": "/api/index?__valaxPath=server/dm-recent" },
     { "source": "/api/server/dm-campaigns", "destination": "/api/index?__valaxPath=server/dm-campaigns" },
     { "source": "/api/server/notifications", "destination": "/api/index?__valaxPath=server/notifications" },
     { "source": "/api/health", "destination": "/api/index?__valaxPath=health" }
