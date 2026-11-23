@@ -146,12 +146,37 @@ function createServerAvatar(guild) {
   return avatar;
 }
 
+/**
+ * 权限徽章 —— **用户权限**和 **bot 权限**是两件事，分开展示。
+ *
+ * ⚠️ 之前只显示 bot 的 Administrator 权限，所以用户会以为
+ *    「这台服务器我能管」（其实可能没有 Manage Server）。
+ *    现在分开显示：
+ *   · 你有 Manage Server 吗？（人）
+ *   · bot 能发消息吗？（机器人）
+ */
 function createPermission(guild) {
-  const badge = document.createElement("span");
-  badge.className = `permission-badge${guild.administrator ? "" : " is-missing"}`;
-  badge.append(icon(guild.administrator ? "shield-check" : "shield-alert"));
-  badge.append(guild.administrator ? "Administrator" : "Permission missing");
-  return badge;
+  const wrapper = document.createElement("div");
+  wrapper.className = "permission-badges";
+
+  const userBadge = document.createElement("span");
+  userBadge.className = `permission-badge${guild.userCanManage ? "" : " is-missing"}`;
+  userBadge.append(icon(guild.userCanManage ? "user-check" : "user-x"));
+  userBadge.append(guild.userCanManage ? "You manage this" : "No Manage Server");
+  userBadge.title = guild.userCanManage
+    ? "You have Manage Server in this server, so Valax can act on it for you."
+    : "You need the Manage Server permission here for Valax to manage this server.";
+
+  const botBadge = document.createElement("span");
+  botBadge.className = `permission-badge${guild.canSendMessages ? "" : " is-missing"}`;
+  botBadge.append(icon(guild.canSendMessages ? "shield-check" : "shield-alert"));
+  botBadge.append(guild.canSendMessages ? "Bot can post" : "Bot cannot post");
+  botBadge.title = guild.administrator
+    ? "The bot has Administrator in this server."
+    : "The bot only needs Send Messages to work here.";
+
+  wrapper.append(userBadge, botBadge);
+  return wrapper;
 }
 
 function createStatus(guild) {
@@ -211,9 +236,16 @@ function createServerRow(guild) {
     const open = document.createElement("button");
     open.type = "button";
     open.className = "server-action is-open is-locked";
-    open.title = guild.administrator ? "Run a connection test to open" : "Administrator permission is required";
+    // ⚠️ 两种「打不开」的原因要分开说：
+    //    · 用户没 Manage Server → 重装 bot 也没用，得先给自己权限
+    //    · bot 不能发消息 → 跑一次连接测试就能验证
+    open.title = !guild.userCanManage
+      ? "You need the Manage Server permission in this server"
+      : guild.canSendMessages
+        ? "Run a connection test to open"
+        : "The bot needs Send Messages permission here";
     open.append(icon("lock-keyhole"), "Open");
-    if (guild.administrator) {
+    if (guild.userCanManage && guild.canSendMessages) {
       open.addEventListener("click", () => openTestDialog(guild.id, true));
     } else {
       open.disabled = true;
@@ -221,7 +253,7 @@ function createServerRow(guild) {
     action.append(open);
   }
 
-  if (guild.administrator) {
+  if (guild.canSendMessages) {
     const test = document.createElement("button");
     test.type = "button";
     test.className = "server-action";
@@ -235,7 +267,7 @@ function createServerRow(guild) {
     fix.href = botInviteForGuild(guild.id);
     fix.target = "_blank";
     fix.rel = "noreferrer";
-    fix.title = "Grant Administrator permission";
+    fix.title = "Grant the bot Send Messages permission";
     fix.append(icon("wrench"), "Fix");
     action.append(fix);
   }

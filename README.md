@@ -73,6 +73,8 @@ DISCORD_CLIENT_SECRET
 DISCORD_REDIRECT_URI
 SITE_URL
 DISCORD_REQUIRED_GUILD_ID
+DISCORD_REQUIRED_GUILD_NAME
+DISCORD_REQUIRED_GUILD_ICON_URL
 DISCORD_INVITE_CODE
 BOT_TOKEN_ENCRYPTION_KEY
 ```
@@ -80,6 +82,24 @@ BOT_TOKEN_ENCRYPTION_KEY
 Generate `BOT_TOKEN_ENCRYPTION_KEY` once as 32 random bytes encoded with base64url. Keep the same
 value for the lifetime of stored bot connections; changing it prevents existing tokens from being
 decrypted. Bot Tokens are validated only on the server and stored with AES-256-GCM encryption.
+
+`DISCORD_REQUIRED_GUILD_NAME` and `DISCORD_REQUIRED_GUILD_ICON_URL` are optional. The name defaults to
+`ValaxScrub`; leaving the icon empty hides the server icon instead of rendering a wrong one.
+
+### Discord OAuth scopes
+
+The bot requests `identify email guilds guilds.join`:
+
+| Scope | Why |
+| --- | --- |
+| `identify` | Discord id and username |
+| `email` | The account email address |
+| `guilds` | Which servers the user is in **and their own permission bits** |
+| `guilds.join` | Lets Valax add the user to the required community server automatically |
+
+`guilds.join` requires the bot to already be in the target server and the server to allow
+OAuth-driven joins. When the automatic join is refused, the reason is stored on the user record and
+surfaced in the onboarding screen so it can be acted on rather than silently ignored.
 
 For production, add every variable to the Vercel Production environment and redeploy. The Discord
 application redirect URI must exactly match `${SITE_URL}/api/callback`.
@@ -97,3 +117,14 @@ The workflow test uses a temporary MongoDB user record and mocked Discord respon
 selection, member mentions, replies, server emoji and sticker discovery, multipart image delivery,
 direct messages, recent conversations, campaigns, and notification settings. Temporary records are
 removed in a `finally` block even when an assertion fails.
+
+`npm test` runs two suites:
+
+| Suite | Covers |
+| --- | --- |
+| `scripts/test-workflows.js` | Message, media, mention, reply, DM, campaign and notification workflows; per-user server permission enforcement; the announcement endpoint |
+| `scripts/test-oauth-flow.js` | Discord OAuth scope contents, community auto-join success and refusal, already-member handling, and encrypted user-token storage |
+
+Both suites run **without a live MongoDB**: `lib/memory-db.js` provides an in-memory MongoDB
+substitute and `lib/database.js` falls back to it when `MONGODB_URI` is absent and `NODE_ENV` is not
+`production`. Set `VALAX_DB_MODE=mongo` to force the real driver.

@@ -82,15 +82,22 @@
           </div>
 
           <div class="community-server">
+            <!--
+              ⚠️ guild id / 名字 / icon **全部由 `/api/onboarding/status` 填**。
+              之前是硬编码常量（连 icon hash 都写死）—— 换群要改代码 + 发版。
+              没有配置 icon 时隐藏 <img>，而不是显示一张别的群图。
+            -->
             <img
-              src="https://cdn.discordapp.com/icons/1490285060765515946/dc0b20c44964edf1c4160d9c3ca2d699.png?size=128"
-              alt="ValaxScrub server"
+              data-community-icon
+              src=""
+              alt=""
               width="76"
               height="76"
+              hidden
             />
             <div>
               <p>REQUIRED COMMUNITY</p>
-              <h3>ValaxScrub</h3>
+              <h3 data-community-name>ValaxScrub</h3>
               <span><span class="status-pulse"></span> Discord server</span>
             </div>
             <i data-lucide="badge-check" aria-hidden="true"></i>
@@ -107,8 +114,19 @@
             <span>Membership was not found yet. Join the server, then check again.</span>
           </div>
 
+          <!--
+            ⚠️ **自动加入的结果**（由 `/api/onboarding/status` 填充）。
+               用户必须知道「为什么我还是没进群」——
+               而不是看到一个没解释的空状态。
+          -->
+          <div class="setup-notice setup-notice-warning" data-autojoin-notice hidden>
+            <i data-lucide="circle-alert" aria-hidden="true"></i>
+            <span></span>
+          </div>
+
           <div class="panel-actions">
-            <a class="button button-primary" href="https://discord.gg/md7xrWB2c2" target="_blank" rel="noreferrer">
+            <!-- ⚠️ href 由服务端 `/api/onboarding/status` 覆盖（`renderCommunity`） -->
+            <a class="button button-primary" href="https://discord.gg/md7xrWB2c2" target="_blank" rel="noreferrer" data-community-invite>
               Join ValaxScrub
               <i data-lucide="external-link" aria-hidden="true"></i>
             </a>

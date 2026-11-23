@@ -16,6 +16,10 @@ const guildResults = document.querySelector("[data-guild-results]");
 const resultActions = document.querySelector("[data-result-actions]");
 const resultGuidance = document.querySelector("[data-result-guidance]");
 const botInvite = document.querySelector("[data-bot-invite]");
+const communityName = document.querySelector("[data-community-name]");
+const communityIcon = document.querySelector("[data-community-icon]");
+const communityTitle = document.querySelector("#community-title");
+const communityInviteLinks = [...document.querySelectorAll("[data-community-invite]")];
 
 let currentConnection = null;
 let botConnections = [];
@@ -87,6 +91,57 @@ function renderAccount(user) {
   account.hidden = false;
   accountName.textContent = user.displayName || user.username || "Discord user";
   replaceAvatar(accountAvatar, user.avatarUrl, `${accountName.textContent}'s Discord avatar`, "user");
+}
+
+/**
+ * 把「必需的社区服务器」信息填进页面。
+ *
+ * ⚠️ **guild id / 名字 / icon / 邀请链接全部来自服务端**。
+ *    之前写死在 `setup.html` 里（连 icon hash 都是常量）——
+ *    换群要改代码 + 发版，配置项形同虚设。
+ */
+function renderCommunity(community) {
+  if (!community) return;
+
+  const name = community.name || "the community server";
+  if (communityName) communityName.textContent = name;
+  if (communityTitle) communityTitle.textContent = `Join the ${name} server.`;
+
+  // ⚠️ 没配 icon 就**隐藏** <img>，不要显示一张别的群的图
+  if (communityIcon) {
+    if (community.iconUrl) {
+      communityIcon.src = community.iconUrl;
+      communityIcon.alt = `${name} server`;
+      communityIcon.hidden = false;
+    } else {
+      communityIcon.removeAttribute("src");
+      communityIcon.hidden = true;
+    }
+  }
+
+  if (community.inviteUrl) {
+    communityInviteLinks.forEach((link) => {
+      link.href = community.inviteUrl;
+    });
+  }
+
+  // ⚠️ **自动加入的结果如实显示** ——
+  //    用户要知道「为什么我还是没进群」，而不是看到一个没解释的空状态。
+  const autoJoin = community.autoJoin;
+  const notice = document.querySelector("[data-autojoin-notice]");
+  if (!notice) return;
+  if (autoJoin?.attempted && !autoJoin?.succeeded) {
+    notice.hidden = false;
+    notice.querySelector("span").textContent =
+      autoJoin.error ||
+      "Valax tried to add you to the community server automatically, but Discord refused. Join it with the button above.";
+  } else if (autoJoin?.succeeded) {
+    notice.hidden = false;
+    notice.querySelector("span").textContent =
+      "Valax added you to the community server with your Discord authorization.";
+  } else {
+    notice.hidden = true;
+  }
 }
 
 function setDiagnostic(row, passed, passLabel = "Enabled", failLabel = "Missing") {
@@ -284,6 +339,7 @@ async function loadStatus() {
     if (!response.ok) throw new Error(payload.error || "Valax could not load your setup status.");
 
     renderAccount(payload.user);
+    renderCommunity(payload.community);
     botConnections = Array.isArray(payload.botConnections) ? payload.botConnections : payload.botConnection ? [payload.botConnection] : [];
     currentConnection = payload.botConnection;
     membershipNotice.hidden = !(payload.currentStep === "community" && new URLSearchParams(location.search).has("checked"));

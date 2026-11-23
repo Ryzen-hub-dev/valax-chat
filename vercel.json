@@ -18,6 +18,7 @@
     { "source": "/api/dashboard/test", "destination": "/api/index?__valaxPath=dashboard/test" },
     { "source": "/api/server", "destination": "/api/index?__valaxPath=server" },
     { "source": "/api/server/messages", "destination": "/api/index?__valaxPath=server/messages" },
+    { "source": "/api/server/announce", "destination": "/api/index?__valaxPath=server/announce" },
     { "source": "/api/server/members", "destination": "/api/index?__valaxPath=server/members" },
     { "source": "/api/server/expressions", "destination": "/api/index?__valaxPath=server/expressions" },
     { "source": "/api/server/expression-library", "destination": "/api/index?__valaxPath=server/expression-library" },

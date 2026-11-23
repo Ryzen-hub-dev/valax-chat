@@ -1866,6 +1866,93 @@
   gap: 14px;
 }
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * 广播面板（频道公告 + crosspost + 可选全员私信）
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+.broadcast-dialog form {
+  display: grid;
+  gap: 14px;
+  padding: 22px 26px 26px;
+}
+
+.broadcast-dialog form > label,
+.broadcast-channel > span {
+  color: #83837d;
+  font-size: 8px;
+}
+
+.broadcast-dialog textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #3a3a37;
+  border-radius: 4px;
+  outline: 0;
+  background: #151514;
+  color: var(--paper);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.broadcast-dialog textarea:focus {
+  border-color: var(--yellow);
+}
+
+.broadcast-target {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #151514;
+}
+
+.broadcast-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--paper);
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.broadcast-check input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--yellow);
+}
+
+.broadcast-channel {
+  display: grid;
+  gap: 5px;
+}
+
+.broadcast-channel strong {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.broadcast-dialog .button {
+  width: fit-content;
+}
+
+.broadcast-result {
+  display: grid;
+  gap: 8px;
+  margin: 0 26px 26px;
+  padding: 14px;
+  border: 1px solid rgba(255, 113, 104, 0.25);
+  border-radius: 4px;
+  background: #1d1716;
+  color: #efb1ad;
+  font-size: 9px;
+  line-height: 1.6;
+}
+
+.broadcast-result p {
+  margin: 0;
+}
+
 .campaign-confirm > div span,
 .campaign-progress > div:first-child span {
   color: #74746e;

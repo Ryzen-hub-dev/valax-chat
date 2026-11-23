@@ -30,6 +30,7 @@ const dmDialog = document.querySelector("[data-dm-dialog]");
 const dmMessageList = document.querySelector("[data-dm-message-list]");
 const dmInput = document.querySelector("[data-dm-input]");
 const campaignDialog = document.querySelector("[data-campaign-dialog]");
+const broadcastDialog = document.querySelector("[data-broadcast-dialog]");
 const notificationDialog = document.querySelector("[data-notification-dialog]");
 const expressionDialog = document.querySelector("[data-expression-dialog]");
 const expressionGrid = document.querySelector("[data-expression-grid]");
@@ -1562,6 +1563,137 @@ function insertInto(input, value) {
   input.focus();
 }
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * 广播面板：频道公告（可 crosspost）+ 可选全员私信
+ *
+ * ⚠️ 为什么单独一个面板，而不是复用 composer：
+ *   · 公告要**先确认再发**（打错字就是全服可见）
+ *   · 全员私信要**打服务器名确认**（防误触）
+ *   · 两者结果要**分开报**（频道成功但 DM 失败 ≠ 全成功）
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+function openBroadcastDialog() {
+  const input = document.querySelector("[data-broadcast-input]");
+  const confirmBox = document.querySelector("[data-broadcast-confirm]");
+  const result = document.querySelector("[data-broadcast-result]");
+  const serverName = document.querySelector("[data-broadcast-server-name]");
+  const channelLabel = document.querySelector("[data-broadcast-channel]");
+
+  if (input) input.value = "";
+  document.querySelector("[data-broadcast-confirmation]").value = "";
+  document.querySelector("[data-broadcast-crosspost]").checked = true;
+  document.querySelector("[data-broadcast-dm]").checked = false;
+  confirmBox.hidden = true;
+  result.hidden = true;
+  result.replaceChildren();
+
+  // 频道名 —— 优先用「公告频道」，没有就用当前频道
+  const announcementChannel =
+    (workspace?.channels || []).find((channel) => channel.announcement) || selectedChannel;
+  if (channelLabel) {
+    channelLabel.textContent = announcementChannel
+      ? `#${announcementChannel.name}${announcementChannel.announcement ? " (announcement channel)" : ""}`
+      : "Select an announcement channel";
+  }
+  if (serverName) serverName.textContent = workspace?.server?.name || "the server";
+
+  if (!broadcastDialog.open) broadcastDialog.showModal();
+  input?.focus();
+}
+
+/** 勾上「全员私信」→ 要求打服务器名确认。 */
+function syncBroadcastConfirmation() {
+  const wantsDm = document.querySelector("[data-broadcast-dm]")?.checked === true;
+  const confirmBox = document.querySelector("[data-broadcast-confirm]");
+  const confirmation = document.querySelector("[data-broadcast-confirmation]");
+  confirmBox.hidden = !wantsDm;
+  if (!wantsDm) confirmation.value = "";
+  else confirmation?.focus();
+}
+
+async function publishBroadcast(event) {
+  event.preventDefault();
+
+  const content = document.querySelector("[data-broadcast-input]").value.trim();
+  const crosspost = document.querySelector("[data-broadcast-crosspost]").checked;
+  const dmBroadcast = document.querySelector("[data-broadcast-dm]").checked;
+  const confirmation = document.querySelector("[data-broadcast-confirmation]").value.trim();
+  const button = document.querySelector("[data-publish-broadcast]");
+
+  if (!content) {
+    showToast("Add announcement text before publishing.", true);
+    return;
+  }
+  if (dmBroadcast && confirmation !== (workspace?.server?.name || "")) {
+    showToast(`Type the server name "${workspace?.server?.name || ""}" to confirm the direct-message broadcast.`, true);
+    return;
+  }
+
+  // 频道 —— 优先公告频道，没有就用当前频道
+  const announcementChannel =
+    (workspace?.channels || []).find((channel) => channel.announcement) || selectedChannel;
+  if (!announcementChannel) {
+    showToast("Select a channel before publishing.", true);
+    return;
+  }
+
+  button.disabled = true;
+  button.classList.add("is-loading");
+
+  try {
+    const response = await fetch("/api/server/announce", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({
+        guildId: guildId || "",
+        botId: workspace?.bot?.id || requestedBotId || "",
+        channelId: announcementChannel.id,
+        content,
+        crosspost,
+        dmBroadcast,
+        confirmation,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+      }),
+    });
+    const payload = await readPayload(response);
+
+    if (!response.ok) {
+      showToast(payload.error || "Valax could not publish this announcement.", true);
+      return;
+    }
+
+    // ⚠️ **结果分开报** —— 频道成功但 DM 失败，不假装全成功
+    const result = document.querySelector("[data-broadcast-result]");
+    const lines = [];
+    lines.push(
+      payload.published
+        ? "Announcement published to the channel."
+        : `Announcement sent to the channel.${payload.crosspostError ? ` ${payload.crosspostError}` : ""}`
+    );
+    if (payload.dm?.queued) {
+      lines.push(`Direct-message broadcast queued for ${payload.dm.campaign.recipientCount} member(s).`);
+    } else if (payload.dm?.skipped) {
+      lines.push("No direct-message broadcast was requested.");
+    } else if (payload.dm?.error) {
+      lines.push(`Direct-message broadcast not started: ${payload.dm.error}`);
+    }
+    result.replaceChildren(...lines.map((text) => {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = text;
+      return paragraph;
+    }));
+    result.hidden = false;
+
+    showToast("Announcement published.");
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "Valax could not publish this announcement.", true);
+  } finally {
+    button.disabled = false;
+    button.classList.remove("is-loading");
+  }
+}
+
 function openCampaignDialog() {
   window.clearTimeout(campaignTimer);
   activeCampaign = null;
@@ -1892,6 +2024,16 @@ expressionSearch?.addEventListener("input", renderExpressions);
 
 document.querySelector("[data-open-campaign]")?.addEventListener("click", openCampaignDialog);
 document.querySelector("[data-close-campaign]")?.addEventListener("click", () => closeDialog(campaignDialog));
+document.querySelector("[data-open-broadcast]")?.addEventListener("click", openBroadcastDialog);
+document.querySelector("[data-close-broadcast]")?.addEventListener("click", () => closeDialog(broadcastDialog));
+document.querySelector("[data-broadcast-form]")?.addEventListener("submit", publishBroadcast);
+document.querySelector("[data-broadcast-dm]")?.addEventListener("change", syncBroadcastConfirmation);
+document.querySelectorAll("[data-broadcast-token]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const input = document.querySelector("[data-broadcast-input]");
+    if (input) insertInto(input, button.textContent.trim());
+  });
+});
 document.querySelector("[data-preview-campaign]")?.addEventListener("click", previewCampaign);
 document.querySelector("[data-campaign-form]")?.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -1917,7 +2059,7 @@ document.querySelector("[data-notification-form]")?.addEventListener("submit", (
   saveNotificationSettings();
 });
 
-[memberDialog, dmDialog, expressionDialog, campaignDialog, notificationDialog].forEach((dialog) => {
+[memberDialog, dmDialog, expressionDialog, campaignDialog, broadcastDialog, notificationDialog].forEach((dialog) => {
   dialog?.addEventListener("click", (event) => {
     if (event.target === dialog) closeDialog(dialog);
   });

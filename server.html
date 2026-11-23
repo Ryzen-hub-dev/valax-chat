@@ -86,6 +86,9 @@
           <button class="icon-button" type="button" data-open-members aria-label="Browse server members" title="Browse server members">
             <i data-lucide="users" aria-hidden="true"></i>
           </button>
+          <button class="icon-button" type="button" data-open-broadcast aria-label="Publish an announcement" title="Publish an announcement">
+            <i data-lucide="megaphone" aria-hidden="true"></i>
+          </button>
           <button class="icon-button" type="button" data-open-campaign aria-label="Send member notification" title="Send member notification">
             <i data-lucide="mails" aria-hidden="true"></i>
           </button>
@@ -285,6 +288,42 @@
         <div class="campaign-metrics"><span><strong data-campaign-sent>0</strong> sent</span><span><strong data-campaign-failed>0</strong> failed</span><span><strong data-campaign-skipped>0</strong> protected</span></div>
         <button class="button button-ghost" type="button" data-cancel-campaign>Cancel campaign</button>
       </div>
+    </dialog>
+
+    <dialog class="workspace-dialog broadcast-dialog" data-broadcast-dialog>
+      <header class="workspace-dialog-header">
+        <div><span>BROADCAST</span><h2>Publish an announcement</h2></div>
+        <button class="icon-button" type="button" data-close-broadcast aria-label="Close broadcast" title="Close broadcast"><i data-lucide="x" aria-hidden="true"></i></button>
+      </header>
+      <form data-broadcast-form>
+        <label for="broadcast-message">Announcement text</label>
+        <textarea id="broadcast-message" data-broadcast-input rows="6" maxlength="2000" placeholder="Write the announcement for this server..." required></textarea>
+        <div class="dynamic-tokens">
+          <button type="button" data-broadcast-token="/date">/date</button>
+          <button type="button" data-broadcast-token="/time">/time</button>
+          <button type="button" data-broadcast-token="/server">/server</button>
+        </div>
+        <div class="broadcast-target">
+          <label class="broadcast-check">
+            <input type="checkbox" data-broadcast-crosspost checked />
+            <span>Publish to the announcement channel (crosspost)</span>
+          </label>
+          <label class="broadcast-check">
+            <input type="checkbox" data-broadcast-dm />
+            <span>Also send a direct message to every member</span>
+          </label>
+        </div>
+        <div class="broadcast-channel">
+          <span>Channel</span>
+          <strong data-broadcast-channel>Select an announcement channel</strong>
+        </div>
+        <div class="campaign-confirm" data-broadcast-confirm hidden>
+          <label for="broadcast-confirmation">Type <strong data-broadcast-server-name>server name</strong> to confirm the direct-message broadcast</label>
+          <input id="broadcast-confirmation" data-broadcast-confirmation autocomplete="off" />
+        </div>
+        <button class="button button-primary" type="submit" data-publish-broadcast><i data-lucide="megaphone" aria-hidden="true"></i> Publish announcement</button>
+      </form>
+      <div class="broadcast-result" data-broadcast-result hidden></div>
     </dialog>
 
     <dialog class="workspace-dialog notification-dialog" data-notification-dialog>
